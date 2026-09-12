@@ -51,6 +51,8 @@ Every number it shows is derived from the fixture or from elapsed time:
 | *N* volumes found | Fixture objects whose reveal window has opened | No — a row count |
 | Room bounds, object poses | `fixtures.py` literals | No |
 
+The proof that none of it is data: the whole sweep can be switched off in the **Graphics** menu (see [frontend.md](./frontend.md#graphics-settings)) and nothing is lost. The room, the object list, reconstruct and ask are identical with the beam, the cloud and the animation all disabled — because the graph was already complete.
+
 If you need the app to stop implying a live capture, the honest change is to the **Source** row and the capture card's wording, not to the animation.
 
 ## The seam: `POST /scene/ingest`
