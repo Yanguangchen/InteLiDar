@@ -57,7 +57,7 @@ In the Blender source, NLA tracks occupy idle frames 1–91, walk 121–157, and
 
 ## Three.js placement
 
-The repo's current viewer renders box geometry. This deliverable adds reusable assets; the viewer has not been changed to load them. Copy the `models` asset subfolders into a served public directory when integrating, or serve this directory explicitly. Paths in [manifest.json](manifest.json) are relative to `models/`.
+The viewer's **Renovate** library loads 26 furniture, plant, and electronics GLBs from this directory using [manifest.json](manifest.json). Vite bundles their URLs automatically; no manual copying is required. The structural door and skinned avatars are excluded from the renovation catalog. Paths in the manifest are relative to `models/`. See the [renovation guide](../docs/renovation.md).
 
 ```js
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';

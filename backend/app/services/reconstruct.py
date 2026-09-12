@@ -18,6 +18,8 @@ def reconstruct_scene(graph: SceneGraph) -> ReconstructResult:
 
 
 def _classify(obj: SceneObject) -> SceneObject:
+    if obj.asset_id:
+        return obj.model_copy()
     demo = _DEMO_BY_ID.get(obj.id)
     if demo is not None:
         labelled = demo.model_copy()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.models import AskResult, IngestRequest
+from app.models import AskResult, IngestRequest, SceneObject
 from app.services.ask import ask_scene
 from app.services.ingest import ingest_capture
 from app.services.reconstruct import reconstruct_scene
@@ -73,3 +73,16 @@ def test_ask_rejects_blank_questions() -> None:
         assert "question" in str(exc).lower()
     else:
         raise AssertionError("expected ValueError for blank question")
+
+
+def test_renovation_answers_follow_added_and_removed_furniture() -> None:
+    twin = _twin()
+    twin.objects = [obj for obj in twin.objects if obj.type not in {"chair", "table"}]
+    twin.objects.append(SceneObject(id="added-sofa", type="sofa", label="Sofa", category="furniture",
+                                    position=(0, 0.43, 0), size=(1.62, 0.86, 0.86), asset_id="sofa_2seat"))
+    chairs = ask_scene(twin, "Show chairs")
+    assert chairs.highlight_ids == []
+    assert "conference table" not in chairs.reply
+    obstacles = ask_scene(twin, "What could obstruct movement?")
+    assert "added-sofa" in obstacles.highlight_ids
+    assert "table-1" not in obstacles.highlight_ids

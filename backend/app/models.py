@@ -37,6 +37,7 @@ class SceneObject(ApiModel):
     confidence: float | None = None
     color: str | None = None
     shape: str | None = None
+    asset_id: str | None = None
 
 
 class SceneGraph(ApiModel):

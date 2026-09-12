@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { askScene, ingestScene, reconstructScene } from './api/scene'
 import { Hud } from './components/Hud'
 import { AppearanceEditor } from './components/AppearanceEditor'
+import { RenovationPanel } from './components/RenovationPanel'
+import { addFurniture, removeFurniture, rotateFurniture, undoRenovation, type RenovationResult, type RenovationUndo } from './scene/renovation'
 import { moveObject, updateAppearance } from './scene/editScene'
 import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
@@ -23,6 +25,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [renovating, setRenovating] = useState(false)
+  const [renovationHistory, setRenovationHistory] = useState<RenovationUndo[]>([])
+  const [renovationMessage, setRenovationMessage] = useState<string | null>(null)
   const imported = useRef(false)
   const sceneVersion = useRef(0)
 
@@ -106,9 +111,37 @@ export default function App() {
     setQuery('')
     setHighlightedIds([])
     setEditing(false)
+    setRenovating(false)
+    setRenovationHistory([])
+    setRenovationMessage(null)
     setDragging(false)
     setError(null)
     skipScan()
+  }
+
+  function applyRenovation(change: () => RenovationResult) {
+    try {
+      const result = change()
+      sceneVersion.current += 1
+      setTwinGraph(result.graph)
+      setRenovationHistory((history) => [...history, result.undo].slice(-30))
+      setHighlightedIds(result.selectedId ? [result.selectedId] : [])
+      setReply(null)
+      setDragging(false)
+      setRenovationMessage(result.undo.kind === 'add' ? 'Furniture added. Drag it to adjust its position.' : 'Furniture removed. Undo is available.')
+    } catch (cause) { setRenovationMessage(cause instanceof Error ? cause.message : 'Could not update this layout.') }
+  }
+
+  function onUndoRenovation() {
+    const action = renovationHistory.at(-1)
+    if (!twinGraph || !action) return
+    sceneVersion.current += 1
+    setTwinGraph(undoRenovation(twinGraph, action))
+    setRenovationHistory((history) => history.slice(0, -1))
+    setHighlightedIds(action.kind === 'remove' ? [action.object.id] : [])
+    setDragging(false)
+    setReply(null)
+    setRenovationMessage('Last renovation undone.')
   }
 
   async function onReconstruct() {
@@ -173,6 +206,7 @@ export default function App() {
           dragging={dragging}
           onDraggingChange={setDragging}
           onMoveObject={onMoveObject}
+          onSelectObject={(id) => setHighlightedIds([id])}
         />
       </Canvas>
       <Hud
@@ -187,7 +221,7 @@ export default function App() {
         highlightedIds={highlightedIds}
         analysisSteps={analysisSteps}
         visibleStepCount={visibleStepCount}
-        onToggleEdit={() => setEditing((current) => !current)}
+        onToggleEdit={() => { setEditing((current) => renovating ? true : !current); setRenovating(false) }}
         onQueryChange={setQuery}
         onAsk={handleAsk}
         onAskSuggestion={(value) => {
@@ -200,11 +234,22 @@ export default function App() {
         onSelectObject={onSelectObject}
         onSettingsChange={setSettings}
         onImportCapture={onImportCapture}
+        renovating={renovating}
+        onToggleRenovation={() => { setRenovating((current) => !current); setEditing(true) }}
       />
-      {editing && mode === 'twin' && twinGraph && (
+      {editing && !renovating && mode === 'twin' && twinGraph && (
         <AppearanceEditor graph={twinGraph} selectedIds={highlightedIds} onSelect={onSelectObject}
           onChange={(id, patch) => setTwinGraph((current) => current ? updateAppearance(current, id, patch) : current)} />
       )}
+      {renovating && mode === 'twin' && twinGraph && <RenovationPanel graph={twinGraph} selectedIds={highlightedIds}
+        canUndo={renovationHistory.length > 0} message={renovationMessage} onSelect={(id) => setHighlightedIds([id])}
+        onAdd={(assetId, height) => applyRenovation(() => addFurniture(twinGraph, assetId, `renovation:${crypto.getRandomValues(new Uint32Array(4)).join('-')}`, height))}
+        onRemove={(id) => applyRenovation(() => removeFurniture(twinGraph, id))} onUndo={onUndoRenovation}
+        onRotate={(id) => {
+          try { setTwinGraph(rotateFurniture(twinGraph, id)); setRenovationMessage('Furniture rotated. Drag it to adjust its position.') }
+          catch (cause) { setRenovationMessage(cause instanceof Error ? cause.message : 'Could not rotate furniture.') }
+        }}
+        onAppearance={() => setRenovating(false)} />}
     </div>
   )
 }

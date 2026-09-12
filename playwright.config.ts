@@ -16,7 +16,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'webkit-iphone', testMatch: '**/capture.spec.ts', use: { ...devices['iPhone 13 Pro'] } },
+    { name: 'webkit-iphone', testMatch: ['**/capture.spec.ts', '**/renovation.spec.ts'], use: { ...devices['iPhone 13 Pro'] } },
   ],
   webServer: [
     {

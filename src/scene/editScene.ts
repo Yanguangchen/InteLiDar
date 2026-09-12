@@ -6,6 +6,7 @@ export function updateAppearance(graph: SceneGraph, id: string, patch: Appearanc
   const target = graph.objects.find((object) => object.id === id)
   if (!target) return graph
   const valid: AppearancePatch = {}
+  if (patch.color === null) valid.color = null
   if (patch.color && /^#[0-9a-f]{6}$/i.test(patch.color)) valid.color = patch.color
   if (patch.material && FINISHES.some((finish) => finish === patch.material)) valid.material = patch.material
   if (patch.shape && (SHAPES[target.type] ?? ['rounded', 'rectangular']).includes(patch.shape)) valid.shape = patch.shape

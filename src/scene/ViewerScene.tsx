@@ -57,6 +57,7 @@ type ViewerSceneProps = {
   dragging: boolean
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
+  onSelectObject: (id: string) => void
 }
 
 export function ViewerScene({
@@ -69,6 +70,7 @@ export function ViewerScene({
   dragging,
   onDraggingChange,
   onMoveObject,
+  onSelectObject,
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
   const importedCapture = graph?.source === 'roomplan'
@@ -199,6 +201,7 @@ export function ViewerScene({
             editing={editing}
             onDraggingChange={onDraggingChange}
             onMoveObject={onMoveObject}
+            onSelectObject={onSelectObject}
           />
         ))}
 
@@ -407,6 +410,7 @@ function SceneMesh({
   editing,
   onDraggingChange,
   onMoveObject,
+  onSelectObject,
 }: {
   object: SceneObject
   origin: Vec3
@@ -419,6 +423,7 @@ function SceneMesh({
   editing: boolean
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
+  onSelectObject: (id: string) => void
 }) {
   const { camera, gl, raycaster } = useThree()
   const dragging = useRef(false)
@@ -491,9 +496,14 @@ function SceneMesh({
 
     window.addEventListener('pointermove', onWindowMove)
     window.addEventListener('pointerup', onWindowUp)
+    window.addEventListener('pointercancel', onWindowUp)
+    window.addEventListener('blur', onWindowUp)
     return () => {
+      onWindowUp()
       window.removeEventListener('pointermove', onWindowMove)
       window.removeEventListener('pointerup', onWindowUp)
+      window.removeEventListener('pointercancel', onWindowUp)
+      window.removeEventListener('blur', onWindowUp)
     }
   }, [camera, gl, raycaster])
 
@@ -535,8 +545,10 @@ function SceneMesh({
             if (!dragging.current) document.body.style.cursor = 'auto'
           }}
           onPointerDown={(event) => {
-            if (!draggable) return
+            if (!editing) return
             event.stopPropagation()
+            onSelectObject(object.id)
+            if (!draggable) return
             event.nativeEvent.stopImmediatePropagation()
             dragging.current = true
             onDraggingChange(true)
@@ -545,13 +557,14 @@ function SceneMesh({
         >
           {reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} />}
         </group>
-        {settings.pointCloud && (
+        {settings.pointCloud && !object.assetId && (
           <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
         )}
       </group>
 
       {reconstructed && (
         <Html
+          zIndexRange={[5, 0]}
           position={[0, object.size[1] / 2 + 0.2, 0]}
           center
           distanceFactor={8}
