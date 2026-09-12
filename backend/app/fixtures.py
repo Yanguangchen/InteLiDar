@@ -1,0 +1,117 @@
+from __future__ import annotations
+
+from app.models import Room, SceneGraph, SceneObject
+
+DEMO_ROOM = Room(
+    id="room-1",
+    name="meeting room",
+    width=7.4,
+    depth=5.2,
+    height=2.8,
+)
+
+DEMO_OBJECTS: list[SceneObject] = [
+    SceneObject(
+        id="table-1",
+        type="table",
+        label="Conference table",
+        category="furniture",
+        position=(0, 0.38, 0.15),
+        size=(2.4, 0.76, 1.2),
+        material="wood",
+        color="#8d5a32",
+        confidence=0.94,
+    ),
+    SceneObject(
+        id="chair-1",
+        type="chair",
+        label="Chair",
+        category="furniture",
+        position=(-0.7, 0.46, 1.15),
+        size=(0.48, 0.92, 0.52),
+        material="fabric",
+        color="#3d4a5c",
+        confidence=0.94,
+    ),
+    SceneObject(
+        id="chair-2",
+        type="chair",
+        label="Chair",
+        category="furniture",
+        position=(0.7, 0.46, 1.15),
+        size=(0.48, 0.92, 0.52),
+        material="fabric",
+        color="#3d4a5c",
+        confidence=0.94,
+    ),
+    SceneObject(
+        id="chair-3",
+        type="chair",
+        label="Chair",
+        category="furniture",
+        position=(-0.7, 0.46, -0.85),
+        size=(0.48, 0.92, 0.52),
+        material="fabric",
+        color="#3d4a5c",
+        confidence=0.94,
+    ),
+    SceneObject(
+        id="chair-4",
+        type="chair",
+        label="Chair",
+        category="furniture",
+        position=(0.7, 0.46, -0.85),
+        size=(0.48, 0.92, 0.52),
+        material="fabric",
+        color="#3d4a5c",
+        confidence=0.94,
+    ),
+    SceneObject(
+        id="monitor-1",
+        type="monitor",
+        label="Display",
+        category="equipment",
+        position=(0, 1.15, -0.28),
+        size=(1.2, 0.72, 0.08),
+        material="plastic",
+        color="#1c222c",
+        confidence=0.9,
+    ),
+    SceneObject(
+        id="shelf-1",
+        type="shelf",
+        label="Storage shelf",
+        category="furniture",
+        position=(-3.25, 0.9, -0.4),
+        size=(0.38, 1.8, 1.6),
+        material="metal",
+        color="#6b6258",
+        confidence=0.88,
+    ),
+    SceneObject(
+        id="door-1",
+        type="door",
+        label="Door",
+        category="opening",
+        position=(0.9, 1.05, 2.58),
+        size=(1.0, 2.1, 0.08),
+        material="wood",
+        color="#5c4030",
+        confidence=0.96,
+    ),
+    SceneObject(
+        id="window-1",
+        type="window",
+        label="Window",
+        category="opening",
+        position=(3.68, 1.5, 0),
+        size=(0.08, 1.4, 2.2),
+        material="glass",
+        color="#7ec8e3",
+        confidence=0.95,
+    ),
+]
+
+
+def demo_twin_graph() -> SceneGraph:
+    return SceneGraph(room=DEMO_ROOM, objects=[obj.model_copy() for obj in DEMO_OBJECTS])
