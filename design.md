@@ -129,21 +129,30 @@ Vite + React + Three.js + React Three Fiber.
 
 ```text
 src/
-  App.tsx                 # mode, graphs, highlights, ask, edit, API wiring
-  api/scene.ts            # ingest / reconstruct / ask client
-  components/Hud.tsx      # chrome only
-  scene/editScene.ts      # drag eligibility + room clamp
-  scene/ViewerScene.tsx   # meshes, lights, labels, pointer drag
-  scene/types.ts          # scene graph types
+  App.tsx                   # mode, graphs, highlights, ask, edit, API wiring
+  api/scene.ts              # ingest / reconstruct / ask client
+  components/Hud.tsx        # chrome only
+  components/useSpecular.ts # pointer-tracked highlight for the glass panels
+  scene/editScene.ts        # drag eligibility + room clamp
+  scene/ViewerScene.tsx     # meshes, lights, labels, pointer drag
+  scene/ScanPoints.tsx      # return cloud, revealed by the sweep in one draw call
+  scene/SensorBeacon.tsx    # the scanner, its beam and floor trace
+  scene/scanReveal.ts       # sweep geometry: bearings, reveal windows, easing
+  scene/scanCloud.ts        # deterministic surface sampling
+  scene/scanAnim.ts         # shared mutable animation clock
+  scene/useScanProgress.ts  # sweep timing, skip, reduced motion
+  scene/types.ts            # scene graph types
 ```
 
 Tests: `src/**/*.test.ts{,x}`, `e2e/demo.spec.ts`. Details: [docs/frontend.md](./docs/frontend.md).
 
 - `App` holds mode, query, reply, `highlightedIds`, edit/drag flags, the ingest graph, and the twin graph.
-- `ViewerScene` is a pure projection of `{ mode, highlightedIds, graph, editing }`.
+- `ViewerScene` is a pure projection of `{ mode, scanProgress, highlightedIds, graph, editing }`.
+- Geometry is never dropped in whole. The opening sweep reveals each surface when the beam reaches its bearing; the twin transition materialises objects on a stagger. Both are timed from wall-clock, and both collapse to their finished state under `prefers-reduced-motion`.
+- Animation runs off one mutable clock read inside `useFrame`, not React state: the canvas must not re-render per frame.
 - Edit mode lets `furniture` and `equipment` slide on the floor plane; `opening` stays fixed. Y is unchanged. Positions are clamped to the room footprint minus half-size.
 - Orbit is disabled only while a piece is being dragged.
-- Reconstruct is disabled until ingest succeeds. Ask is disabled until `twin`. Edit is disabled during `analysing`.
+- Reconstruct is withheld until ingest succeeds **and** the sweep finishes. Ask is disabled until `twin`. Edit is disabled while sweeping and during `analysing`.
 
 UI surfaces: [docs/frontend.md](./docs/frontend.md).
 

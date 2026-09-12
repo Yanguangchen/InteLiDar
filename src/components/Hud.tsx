@@ -1,13 +1,20 @@
-import type { FormEvent } from 'react'
-import type { AnalysisStep, SceneGraph, SceneMode } from '../scene/types'
+import type { FormEvent, ReactNode } from 'react'
+import type { AnalysisStep, SceneGraph, SceneMode, SceneObject } from '../scene/types'
+import { capturedPoints, revealedObjects } from '../scene/scanReveal'
+import type { GraphicsSettings } from '../settings/graphics'
+import { GraphicsMenu } from './GraphicsMenu'
+import { useSpecular } from './useSpecular'
 
 type HudProps = {
   mode: SceneMode
   graph: SceneGraph | null
+  scanProgress: number
   query: string
   reply: string | null
   error: string | null
   editing: boolean
+  highlightedIds: string[]
+  settings: GraphicsSettings
   analysisSteps: AnalysisStep[]
   visibleStepCount: number
   onToggleEdit: () => void
@@ -15,6 +22,9 @@ type HudProps = {
   onAsk: (event: FormEvent) => void
   onAskSuggestion: (value: string) => void
   onReconstruct: () => void
+  onSkipScan: () => void
+  onSelectObject: (id: string) => void
+  onSettingsChange: (settings: GraphicsSettings) => void
 }
 
 const SUGGESTIONS = [
@@ -26,10 +36,13 @@ const SUGGESTIONS = [
 export function Hud({
   mode,
   graph,
+  scanProgress,
   query,
   reply,
   error,
   editing,
+  highlightedIds,
+  settings,
   analysisSteps,
   visibleStepCount,
   onToggleEdit,
@@ -37,16 +50,25 @@ export function Hud({
   onAsk,
   onAskSuggestion,
   onReconstruct,
+  onSkipScan,
+  onSelectObject,
+  onSettingsChange,
 }: HudProps) {
+  const specular = useSpecular()
   const reconstructed = mode === 'twin'
+  const scanning = mode === 'raw' && graph !== null && scanProgress < 1
   const room = graph?.room
   const objects = graph?.objects ?? []
+  const detected = reconstructed ? objects : revealedObjects(graph, scanProgress)
+  const found = new Set(detected.map((object) => object.id))
 
   return (
     <div className="hud">
-      <header className="topbar">
+      <div className="scrim" aria-hidden="true" />
+
+      <header className="topbar glass" {...specular}>
         <div className="brand">
-          <span className="mark" aria-hidden="true" />
+          <span className={`mark ${scanning ? 'sweeping' : ''}`} aria-hidden="true" />
           <div>
             <p className="name">InteLiDar</p>
             <p className="tag">Scan reality. AI understands it.</p>
@@ -55,38 +77,41 @@ export function Hud({
         <div className="topbar-actions">
           <button
             type="button"
-            className={`edit-toggle ${editing ? 'on' : ''}`}
+            className={`chip edit-toggle ${editing ? 'on' : ''}`}
             aria-pressed={editing}
-            disabled={!graph || mode === 'analysing'}
+            disabled={!graph || scanning || mode === 'analysing'}
             onClick={onToggleEdit}
           >
             {editing ? 'Editing' : 'Edit'}
           </button>
-          <div className={`status ${reconstructed ? 'status-twin' : 'status-raw'}`}>
+          <div
+            className={`chip status status-${statusTone(mode, scanning)}`}
+            aria-live="polite"
+          >
             <span className="status-dot" />
-            {mode === 'raw' && 'Raw mesh'}
+            {scanning && 'LiDAR capture'}
+            {!scanning && mode === 'raw' && 'Raw mesh'}
             {mode === 'analysing' && 'Analysing scene'}
             {mode === 'twin' && 'Semantic twin'}
           </div>
+          <GraphicsMenu settings={settings} onChange={onSettingsChange} />
         </div>
       </header>
 
-      <aside className="panel panel-left">
+      <aside className="panel panel-left glass" {...specular}>
         <p className="panel-kicker">Scene</p>
-        <h2>{reconstructed ? room?.name ?? 'Meeting room' : 'Unlabelled scan'}</h2>
+        <h2>{reconstructed ? (room?.name ?? 'Meeting room') : scanning ? 'Scanning' : 'Unlabelled scan'}</h2>
         {editing && (
           <p className="edit-hint">Drag tables, chairs, and equipment. Doors and windows stay fixed.</p>
         )}
         <dl className="meta">
           <div>
             <dt>Size</dt>
-            <dd>
-              {room ? `${room.width} × ${room.depth} × ${room.height} m` : '—'}
-            </dd>
+            <dd>{room ? `${room.width} × ${room.depth} × ${room.height} m` : '—'}</dd>
           </div>
           <div>
             <dt>Objects</dt>
-            <dd>{reconstructed ? objects.length : '—'}</dd>
+            <dd>{graph ? detected.length : '—'}</dd>
           </div>
           <div>
             <dt>Source</dt>
@@ -95,46 +120,69 @@ export function Hud({
         </dl>
 
         <ul className="object-list">
-          {objects.map((object) => (
-            <li key={object.id} className={reconstructed ? 'known' : 'unknown'}>
-              <span className="obj-type">{reconstructed ? object.type : 'unknown'}</span>
-              <span>{object.label}</span>
-            </li>
-          ))}
+          {objects.map((object) =>
+            found.has(object.id) ? (
+              <ObjectRow
+                key={object.id}
+                object={object}
+                reconstructed={reconstructed}
+                highlighted={highlightedIds.includes(object.id)}
+                onSelect={onSelectObject}
+              />
+            ) : (
+              // A volume the sweep has not reached: held open so the list never jumps.
+              <li key={object.id} className="ghost" aria-hidden="true" />
+            ),
+          )}
         </ul>
       </aside>
 
       {mode !== 'twin' && (
-        <div className="reconstruct-wrap">
-          {mode === 'analysing' ? (
-            <div className="analysis" role="status">
+        <div className="stage">
+          {scanning && (
+            <CaptureReadout
+              progress={scanProgress}
+              detected={detected.length}
+              onSkip={onSkipScan}
+            />
+          )}
+          {!scanning && mode === 'raw' && (
+            <GlassButton className="reconstruct" disabled={!graph} onClick={onReconstruct}>
+              <span className="spark" aria-hidden="true">
+                ✨
+              </span>
+              AI Reconstruct
+            </GlassButton>
+          )}
+          {mode === 'analysing' && (
+            <div className="analysis glass" role="status" {...specular}>
               <p className="panel-kicker">Computer vision</p>
               <ol>
                 {analysisSteps.slice(0, visibleStepCount).map((step) => (
                   <li key={`${step.from}-${step.to}`}>
                     <span>{step.from}</span>
-                    <span className="arrow">→</span>
+                    <span className="arrow" aria-hidden="true">
+                      →
+                    </span>
                     <strong>{step.to}</strong>
                   </li>
                 ))}
               </ol>
             </div>
-          ) : (
-            <button type="button" className="reconstruct" onClick={onReconstruct} disabled={!graph}>
-              ✨ AI Reconstruct
-            </button>
           )}
         </div>
       )}
 
-      <form className="ask" onSubmit={onAsk}>
+      <form className="ask glass" onSubmit={onAsk} {...specular}>
         <label htmlFor="ask-input">Ask the spatial assistant</label>
         <div className="ask-row">
           <input
             id="ask-input"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder={reconstructed ? 'Show me all the chairs.' : 'Reconstruct the scene to ask questions'}
+            placeholder={
+              reconstructed ? 'Show me all the chairs.' : 'Reconstruct the scene to ask questions'
+            }
             disabled={!reconstructed}
             autoComplete="off"
           />
@@ -151,9 +199,110 @@ export function Hud({
             ))}
           </div>
         )}
-        {reply && <p className="reply">{reply}</p>}
+        {reply && (
+          <p className="reply" aria-live="polite">
+            {reply}
+          </p>
+        )}
         {error && <p className="error">{error}</p>}
       </form>
     </div>
+  )
+}
+
+function statusTone(mode: SceneMode, scanning: boolean): string {
+  if (scanning) return 'scan'
+  if (mode === 'analysing') return 'think'
+  return mode === 'twin' ? 'twin' : 'raw'
+}
+
+function ObjectRow({
+  object,
+  reconstructed,
+  highlighted,
+  onSelect,
+}: {
+  object: SceneObject
+  reconstructed: boolean
+  highlighted: boolean
+  onSelect: (id: string) => void
+}) {
+  const confidence = reconstructed && object.confidence ? Math.round(object.confidence * 100) : null
+
+  return (
+    <li className={reconstructed ? 'known' : 'unknown'}>
+      <button
+        type="button"
+        className={`object-row ${highlighted ? 'hot' : ''}`}
+        aria-pressed={highlighted}
+        onClick={() => onSelect(object.id)}
+      >
+        <span className="obj-type">{reconstructed ? object.type : 'unknown'}</span>
+        <span className="obj-label">{object.label}</span>
+        {confidence !== null && <span className="obj-confidence">{confidence}%</span>}
+      </button>
+    </li>
+  )
+}
+
+function CaptureReadout({
+  progress,
+  detected,
+  onSkip,
+}: {
+  progress: number
+  detected: number
+  onSkip: () => void
+}) {
+  const specular = useSpecular<HTMLDivElement>()
+  const percent = Math.round(progress * 100)
+
+  return (
+    <div className="capture glass" {...specular}>
+      <div className="capture-head">
+        <p className="panel-kicker">Sensor</p>
+        <p className="capture-percent">{percent}%</p>
+      </div>
+      <div
+        className="capture-track"
+        role="progressbar"
+        aria-label="LiDAR capture progress"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div className="capture-fill" style={{ width: `${percent}%` }}>
+          <span className="capture-head-glow" />
+        </div>
+      </div>
+      <div className="capture-foot">
+        <p>
+          <strong>{capturedPoints(progress).toLocaleString('en-US')}</strong> returns ·{' '}
+          <strong>{detected}</strong> volumes found
+        </p>
+        <button type="button" className="skip" onClick={onSkip}>
+          Skip
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function GlassButton({
+  className,
+  disabled,
+  onClick,
+  children,
+}: {
+  className: string
+  disabled?: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  const specular = useSpecular<HTMLButtonElement>()
+  return (
+    <button type="button" className={className} disabled={disabled} onClick={onClick} {...specular}>
+      {children}
+    </button>
   )
 }

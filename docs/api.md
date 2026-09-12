@@ -74,7 +74,10 @@ Rules:
 - Omit `room` while sending objects → demo room bounds with your objects.
 - Incoming `type` / `label` / `material` / `confidence` are discarded.
 - `category` is kept when provided; otherwise `furniture`. Door/window type or `opening` category become openings (label `Unknown opening`).
-- `id`, `position`, `size`, `rotation`, `color` are preserved.
+- `id`, `position`, `size`, `rotation`, `color` are preserved. Note that `color` survives even though the object is typed `unknown`.
+- `source` is accepted by the model and then **ignored** — never read, never echoed. It is a placeholder, not provenance. See [capture.md](./capture.md#the-seam-post-sceneingest).
+- Geometry is **not** validated against the room bounds. An object at `[500, 0, 500]` in a 4 m room is accepted as sent.
+- `units` must be `"m"`; anything else is a `422`.
 
 Response: a `SceneGraph` (see below). Status `200`.
 

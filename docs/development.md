@@ -17,6 +17,7 @@ Tests written after the code are not TDD.
 Prefer domain logic:
 
 - Scene graph queries and highlight ids
+- Sweep geometry: which bearing a surface sits at, when its reveal window opens
 - Ingest stripping and reconstruct classification
 - Ask heuristics and reasoner id filtering
 - Edit: drag eligibility, floor clamp, immutable updates
@@ -49,11 +50,18 @@ Coverage map: [tests/AUDIT.md](../tests/AUDIT.md).
 
 ```text
 src/scene/editScene.test.ts      # drag rules
+src/scene/scanReveal.test.ts     # sweep bearings, reveal windows, easing
+src/scene/scanCloud.test.ts      # return sampling
+src/scene/scanAnim.test.ts       # canvas animation clock
+src/scene/useScanProgress.test.ts # sweep timing, skip, reduced motion
 src/api/scene.test.ts            # fetch client
-src/components/Hud.test.tsx      # reconstruct / ask / edit gating
+src/components/Hud.test.tsx      # reconstruct / ask / edit / sweep gating
+src/components/useSpecular.test.ts # glass highlight tracking
+src/components/GraphicsMenu.test.tsx # quality menu behaviour
+src/settings/graphics.test.ts    # presets, defaults, persistence
 src/test/setup.ts                # Testing Library + jest-dom
 src/test/sampleGraph.ts          # shared fixture
-e2e/demo.spec.ts                 # Playwright: reconstruct → ask chairs → Edit
+e2e/demo.spec.ts                 # Playwright: sweep → reconstruct → ask chairs → Edit
 backend/tests/test_ingest.py
 backend/tests/test_reconstruct.py
 backend/tests/test_ask.py
