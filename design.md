@@ -32,11 +32,11 @@ The first slice is a **browser UI over a mock meeting room**, with a FastAPI sce
 | OpenAI ask adapter (stubbed in tests, heuristic fallback) | In place |
 | Vitest (edit, HUD gating, API client) | In place |
 | Playwright demo E2E | In place |
-| Real LiDAR / RoomPlan import | Not started |
+| LiDAR iPhone / RoomPlan import | Native source + Safari file import; Xcode/device verification pending |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
 
-Until real capture exists, `POST /scene/ingest` with an empty body returns the demo scan with semantics stripped.
+`POST /scene/ingest` with an empty body returns the demo scan with semantics stripped. The native iPhone app exports a labelled RoomPlan graph for the browser's **Import scan** flow; installation and device validation are documented in [ios/README.md](./ios/README.md).
 
 ## Demo state machine
 
@@ -79,7 +79,7 @@ Keep geometry, semantics, and presentation separate.
 | Reasoner | Structured answers over the graph | Camera controls |
 | Viewer | Render + highlight + HUD + drag | Inventing objects |
 
-Today capture and vision are skipped. Ingest produces a graph. Reconstruct and ask mutate or query that graph. The viewer never invents objects.
+The initial scene skips capture and vision and uses demo ingest. Imported native RoomPlan exports provide measured poses and device labels. Reconstruct and ask operate on the selected graph. Image-based vision is not implemented.
 
 ## Semantic scene graph
 

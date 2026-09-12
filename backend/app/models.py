@@ -36,9 +36,11 @@ class SceneObject(ApiModel):
     material: str | None = None
     confidence: float | None = None
     color: str | None = None
+    shape: str | None = None
 
 
 class SceneGraph(ApiModel):
+    source: Literal["demo", "roomplan"] = "demo"
     room: Room
     objects: list[SceneObject]
 

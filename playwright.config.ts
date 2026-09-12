@@ -14,7 +14,10 @@ export default defineConfig({
     // The opening sweep is motion; pin the preference so the demo path is stable.
     reducedMotion: 'no-preference',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'webkit-iphone', testMatch: '**/capture.spec.ts', use: { ...devices['iPhone 13 Pro'] } },
+  ],
   webServer: [
     {
       command: 'npm run backend',

@@ -1,8 +1,9 @@
 import { Canvas } from '@react-three/fiber'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { askScene, ingestScene, reconstructScene } from './api/scene'
 import { Hud } from './components/Hud'
-import { moveObject } from './scene/editScene'
+import { AppearanceEditor } from './components/AppearanceEditor'
+import { moveObject, updateAppearance } from './scene/editScene'
 import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
 import { SCAN_DURATION_MS } from './scene/scanReveal'
@@ -22,44 +23,53 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const imported = useRef(false)
+  const sceneVersion = useRef(0)
 
   const [settings, setSettings] = useGraphics()
 
   const displayGraph = mode === 'twin' && twinGraph ? twinGraph : graph
+  const importedCapture = displayGraph?.source === 'roomplan'
   // The sweep only starts once there is geometry for the sensor to find, and a
   // duration of 0 hands over a finished scan when animation is switched off.
   const { progress: scanProgress, skip: skipScan } = useScanProgress(
     graph !== null,
-    settings.motion ? SCAN_DURATION_MS : 0,
+    settings.motion && !importedCapture ? SCAN_DURATION_MS : 0,
   )
   const scanning = mode === 'raw' && graph !== null && scanProgress < 1
 
   useEffect(() => {
+    let cancelled = false
     ingestScene()
       .then((scene) => {
+        if (cancelled || imported.current) return
         setGraph(scene)
         setError(null)
       })
       .catch(() => {
+        if (cancelled || imported.current) return
         setError('Backend unavailable. Start the API on port 8000.')
       })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
     if (mode !== 'analysing' || analysisSteps.length === 0) return
 
     setVisibleStepCount(0)
+    let completionTimer: number | undefined
     const timers = analysisSteps.map((_, index) =>
       window.setTimeout(() => {
         setVisibleStepCount(index + 1)
         if (index === analysisSteps.length - 1) {
-          window.setTimeout(() => setMode('twin'), 700)
+          completionTimer = window.setTimeout(() => setMode('twin'), 700)
         }
       }, 380 * (index + 1)),
     )
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer))
+      window.clearTimeout(completionTimer)
     }
   }, [mode, analysisSteps])
 
@@ -85,29 +95,51 @@ export default function App() {
     )
   }
 
+  function onImportCapture(scene: SceneGraph) {
+    sceneVersion.current += 1
+    imported.current = true
+    setGraph(scene)
+    setTwinGraph(scene)
+    setMode('twin')
+    setAnalysisSteps([])
+    setReply(null)
+    setQuery('')
+    setHighlightedIds([])
+    setEditing(false)
+    setDragging(false)
+    setError(null)
+    skipScan()
+  }
+
   async function onReconstruct() {
     if (!graph) return
+    const version = sceneVersion.current
     setError(null)
     try {
       const result = await reconstructScene(graph)
+      if (version !== sceneVersion.current) return
       setTwinGraph(result.graph)
       setAnalysisSteps(result.analysisSteps)
       setMode('analysing')
     } catch {
+      if (version !== sceneVersion.current) return
       setError('Reconstruct failed. Is the backend running?')
     }
   }
 
   async function ask(question: string) {
+    const version = sceneVersion.current
     const scene = twinGraph
     if (mode !== 'twin' || !scene || question.trim().length === 0) return
     setQuery(question)
     try {
       const result = await askScene(scene, question)
+      if (version !== sceneVersion.current) return
       setReply(result.reply)
       setHighlightedIds(result.highlightIds)
       setError(null)
     } catch {
+      if (version !== sceneVersion.current) return
       setError('Ask failed. Is the backend running?')
     }
   }
@@ -122,6 +154,7 @@ export default function App() {
       className="app"
       data-glass={settings.glassBlur ? 'on' : 'off'}
       data-motion={settings.motion ? 'on' : 'off'}
+      data-source={displayGraph?.source ?? 'demo'}
     >
       <Canvas
         shadows="percentage"
@@ -130,9 +163,10 @@ export default function App() {
         gl={{ antialias: true }}
       >
         <ViewerScene
+          key={displayGraph?.room.id ?? 'empty'}
           mode={mode}
           graph={displayGraph}
-          scanProgress={scanProgress}
+          scanProgress={importedCapture ? 1 : scanProgress}
           settings={settings}
           highlightedIds={highlightedIds}
           editing={editing}
@@ -165,7 +199,12 @@ export default function App() {
         onSkipScan={skipScan}
         onSelectObject={onSelectObject}
         onSettingsChange={setSettings}
+        onImportCapture={onImportCapture}
       />
+      {editing && mode === 'twin' && twinGraph && (
+        <AppearanceEditor graph={twinGraph} selectedIds={highlightedIds} onSelect={onSelectObject}
+          onChange={(id, patch) => setTwinGraph((current) => current ? updateAppearance(current, id, patch) : current)} />
+      )}
     </div>
   )
 }

@@ -1,8 +1,41 @@
 from __future__ import annotations
 
-from app.models import CaptureObject, IngestRequest, Room
+from app.models import CaptureObject, IngestRequest, Room, SceneGraph, SceneObject
 from app.services.ingest import ingest_capture
 from app.services.reconstruct import reconstruct_scene
+
+
+def test_reconstruct_preserves_custom_appearance() -> None:
+    raw = ingest_capture(IngestRequest())
+    raw.objects[0].color = "#467568"
+    raw.objects[0].material = "stone"
+    raw.objects[0].shape = "oval"
+    result = reconstruct_scene(raw)
+    table = result.graph.objects[0]
+    assert table.color == "#467568"
+    assert table.material == "stone"
+    assert table.shape == "oval"
+    assert table.size == raw.objects[0].size
+
+
+def test_demo_contains_different_chair_styles_and_colors() -> None:
+    result = reconstruct_scene(ingest_capture(IngestRequest()))
+    chairs = [obj for obj in result.graph.objects if obj.type == "chair"]
+    assert len({chair.color for chair in chairs}) == 4
+    assert {chair.shape for chair in chairs} >= {"task", "armchair", "visitor"}
+
+
+def test_roomplan_reconstruction_preserves_device_labels_without_demo_id_lookup() -> None:
+    graph = SceneGraph(
+        source="roomplan", room=Room(width=5, depth=4, height=2.6),
+        objects=[SceneObject(id="table-1", type="chair", label="Captured chair", category="furniture",
+                             position=(0, 0.45, 0), size=(0.5, 0.9, 0.5), rotation=(0, 1.2, 0))],
+    )
+    result = reconstruct_scene(graph)
+    assert result.graph.model_dump()["source"] == "roomplan"
+    assert result.graph.objects[0].type == "chair"
+    assert result.graph.objects[0].label == "Captured chair"
+    assert result.graph.objects[0].rotation == (0, 1.2, 0)
 
 
 def test_reconstruct_keeps_ids_and_labels_demo_objects() -> None:

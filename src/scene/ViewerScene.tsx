@@ -14,6 +14,7 @@ import {
   type Mesh,
 } from 'three'
 import { canDragObject } from './editScene'
+import { FurnitureModel } from './FurnitureModel'
 import { ScanPoints } from './ScanPoints'
 import { SensorBeacon } from './SensorBeacon'
 import { approach, createScanAnim, type ScanAnim } from './scanAnim'
@@ -70,7 +71,19 @@ export function ViewerScene({
   onMoveObject,
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
+  const importedCapture = graph?.source === 'roomplan'
+  const sceneSettings = useMemo(() => importedCapture ? { ...settings, pointCloud: false, beam: false } : settings, [settings, importedCapture])
   const room = graph?.room ?? FALLBACK_ROOM
+  const { camera, size: viewport } = useThree()
+  const roomSpan = Math.max(room.width, room.depth, room.height)
+  useEffect(() => {
+    if (!importedCapture) return
+    // Fit the measured room, including portrait Safari screens.
+    const distance = Math.hypot(room.width, room.depth, room.height) * Math.max(1.3, viewport.height / viewport.width * 1.4)
+    camera.position.set(distance * 0.65, distance * 0.5 + room.height * 0.35, distance * 0.7)
+    camera.far = Math.max(100, distance * 5)
+    camera.updateProjectionMatrix()
+  }, [camera, importedCapture, room.width, room.depth, room.height, viewport.width, viewport.height])
   const objects = useMemo(() => graph?.objects ?? [], [graph])
   const anim = useMemo(createScanAnim, [])
   const origin = useMemo(() => sensorOrigin(room), [room])
@@ -118,7 +131,7 @@ export function ViewerScene({
 
   return (
     <>
-      <fog attach="fog" args={['#05070a', 9, 26]} />
+      <fog attach="fog" args={['#05070a', importedCapture ? roomSpan * 3 : 9, importedCapture ? roomSpan * 8 : 26]} />
 
       <hemisphereLight
         args={[reconstructed ? '#e3ecff' : '#8f9aac', '#1a1f27', reconstructed ? 0.95 : 0.28]}
@@ -164,13 +177,13 @@ export function ViewerScene({
         autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
-        maxDistance={16}
-        target={[0, 1, 0]}
+        maxDistance={importedCapture ? roomSpan * 8 : 16}
+        target={[0, importedCapture ? room.height * 0.35 : 1, 0]}
       />
 
       <group>
-        <RoomShell room={room} anim={anim} solo={!settings.pointCloud} />
-        {graph && settings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
+        <RoomShell room={room} anim={anim} solo={!sceneSettings.pointCloud} />
+        {graph && sceneSettings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
 
         {objects.map((object, index) => (
           <SceneMesh
@@ -180,7 +193,7 @@ export function ViewerScene({
             anim={anim}
             window={schedule?.get(object.id) ?? WHOLE_WINDOW}
             materialise={materialiseWindow(index, objects.length)}
-            settings={settings}
+            settings={sceneSettings}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
             editing={editing}
@@ -189,7 +202,7 @@ export function ViewerScene({
           />
         ))}
 
-        <SensorBeacon room={room} anim={anim} beam={settings.beam} />
+        {!importedCapture && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
         <FloorGrid room={room} anim={anim} />
       </group>
     </>
@@ -417,7 +430,6 @@ function SceneMesh({
   dragChangeRef.current = onDraggingChange
 
   const draggable = editing && canDragObject(object)
-  const isGlass = object.material === 'glass'
 
   // Keyed on identity, not position: the returns belong to the object and travel
   // with it, so dragging furniture never re-scans the room.
@@ -426,16 +438,6 @@ function SceneMesh({
     () => buildObjectCloud(objectRef.current, origin),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cloudKey, origin],
-  )
-
-  const tones = useMemo(
-    () => ({
-      base: new Color(object.color ?? '#8d8d8d'),
-      hot: new Color('#8ff0de'),
-      accent: new Color(ACCENT),
-      off: new Color('#000000'),
-    }),
-    [object.color],
   )
 
   const rawMaterial = useMemo(
@@ -452,30 +454,14 @@ function SceneMesh({
     [],
   )
 
-  const twinMaterial = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color: new Color(object.color ?? '#8d8d8d'),
-        roughness: isGlass ? 0.1 : 0.68,
-        metalness: object.material === 'metal' ? 0.45 : 0,
-        transparent: true,
-        opacity: 0,
-        emissive: new Color(ACCENT),
-        emissiveIntensity: 0,
-      }),
-    [object.color, object.material, isGlass],
-  )
-
   const shell = useRef<Group>(null)
   const rawMesh = useRef<Mesh>(null)
-  const twinMesh = useRef<Mesh>(null)
 
   useEffect(
     () => () => {
       rawMaterial.dispose()
-      twinMaterial.dispose()
     },
-    [rawMaterial, twinMaterial],
+    [rawMaterial],
   )
 
   useEffect(() => {
@@ -529,32 +515,17 @@ function SceneMesh({
     rawMaterial.emissiveIntensity = (1 - found) ** 2 * 1.6 + anim.think * 0.4
     if (rawMesh.current) rawMesh.current.visible = rawMaterial.opacity > 0.004
 
-    const glow = highlighted ? 0.45 + Math.sin(anim.time * 4.2) * 0.18 : draggable ? 0.12 : 0
-    twinMaterial.opacity = solid * (isGlass ? 0.38 : 1)
-    twinMaterial.transparent = isGlass || solid < 1 || highlighted
-    twinMaterial.emissiveIntensity = glow * solid
-    twinMaterial.emissive.copy(highlighted || draggable ? tones.accent : tones.off)
-    twinMaterial.color.copy(highlighted ? tones.hot : tones.base)
-    if (twinMesh.current) {
-      twinMesh.current.visible = solid > 0.004
-      // The last centimetre of the lift into place.
-      twinMesh.current.position.y = (1 - solid) * 0.06
-    }
   })
 
   const labelDelay = settings.motion ? (materialise.start * TWIN_DURATION_MS) / 1000 : 0
 
   return (
-    <group position={object.position}>
+    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]}>
       <group ref={shell}>
         <mesh ref={rawMesh} material={rawMaterial}>
           <boxGeometry args={object.size} />
         </mesh>
-        <mesh
-          ref={twinMesh}
-          material={twinMaterial}
-          castShadow
-          receiveShadow
+        <group
           onPointerOver={(event) => {
             if (!draggable) return
             event.stopPropagation()
@@ -572,8 +543,8 @@ function SceneMesh({
             document.body.style.cursor = 'grabbing'
           }}
         >
-          <boxGeometry args={object.size} />
-        </mesh>
+          {reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} />}
+        </group>
         {settings.pointCloud && (
           <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
         )}

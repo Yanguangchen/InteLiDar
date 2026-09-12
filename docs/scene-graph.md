@@ -2,7 +2,7 @@
 
 Canonical JSON for a room. Every layer reads or writes this shape. Types: [src/scene/types.ts](../src/scene/types.ts) (TypeScript) and [backend/app/models.py](../backend/app/models.py) (Pydantic). Keep them aligned.
 
-Wire format is camelCase. Coordinates are metres, Y-up, origin at the floor centre. Object `position` is the **box centre**.
+Wire format is camelCase. Coordinates are metres, Y-up, origin at the floor centre. Object `position` is the **box centre**. The optional top-level `source` is `demo` (default) or `roomplan`; RoomPlan graphs keep their device labels through reconstruction and suppress the synthetic sensor effects in the viewer. The versioned file wrapper used for import is described in [ios/README.md](../ios/README.md).
 
 ## Room
 
@@ -27,7 +27,8 @@ The floor rectangle is `x ∈ [-width/2, width/2]`, `z ∈ [-depth/2, depth/2]`,
 | `category` | enum | `structure` \| `furniture` \| `opening` \| `equipment`. Drives edit rules. |
 | `position` | `[x, y, z]` | Centre in metres. |
 | `size` | `[sx, sy, sz]` | Full extents (not half-extents). |
-| `rotation` | `[rx, ry, rz]` \| null | Stored, not applied in the MVP viewer. |
+| `rotation` | `[rx, ry, rz]` \| null | XYZ Euler angles in radians, applied to the object's model and scan representation. |
+| `shape` | string \| null | Optional model variant, such as table `oval` or chair `armchair`; missing/unsupported values use the type's default. |
 | `material` | string \| null | `wood`, `fabric`, `glass`, `metal`, `plastic`, … |
 | `confidence` | number \| null | 0–1 when known. |
 | `color` | string \| null | Hex for the twin mesh. |

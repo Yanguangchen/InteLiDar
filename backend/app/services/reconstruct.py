@@ -9,9 +9,10 @@ _DEMO_BY_ID = {obj.id: obj for obj in demo_twin_graph().objects}
 
 
 def reconstruct_scene(graph: SceneGraph) -> ReconstructResult:
-    objects = [_classify(obj) for obj in graph.objects]
+    # RoomPlan already labels its measured objects. Never overwrite these with demo ids or size heuristics.
+    objects = [obj.model_copy() for obj in graph.objects] if graph.source == "roomplan" else [_classify(obj) for obj in graph.objects]
     return ReconstructResult(
-        graph=SceneGraph(room=graph.room, objects=objects),
+        graph=SceneGraph(source=graph.source, room=graph.room, objects=objects),
         analysis_steps=_analysis_steps(objects),
     )
 
@@ -23,6 +24,9 @@ def _classify(obj: SceneObject) -> SceneObject:
         labelled.position = obj.position
         labelled.size = obj.size
         labelled.rotation = obj.rotation
+        labelled.color = obj.color or labelled.color
+        labelled.material = obj.material or labelled.material
+        labelled.shape = obj.shape or labelled.shape
         return labelled
     return _classify_geometry(obj)
 
