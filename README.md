@@ -34,6 +34,7 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | [Demo script](./docs/demo-script.md) | Walkthrough for a live presentation |
 | [Design](./design.md) | Engineering map, constraints, build order |
 | [Architecture](./docs/architecture.md) | Layers, data flow, frontend state |
+| [Capture](./docs/capture.md) | What the "scanner" really is, and the ingest seam |
 | [HTTP API](./docs/api.md) | Ingest, reconstruct, ask, examples |
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
 | [Frontend](./docs/frontend.md) | Viewer, HUD, reconstruct UX, edit mode |

@@ -10,7 +10,7 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 
 | Item | In this repo |
 | --- | --- |
-| LiDAR room scan | Demo ingest stands in; RoomPlan not started |
+| LiDAR room scan | Demo ingest stands in; RoomPlan not started ([capture.md](./capture.md)) |
 | Exported 3D mesh | Axis-aligned boxes from the graph |
 | Browser 3D viewer | React Three Fiber |
 | Basic object or surface recognition | Reconstruct (demo ids + size heuristics) |

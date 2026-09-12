@@ -7,6 +7,7 @@ Guides for running and extending InteLiDar. Start at the [README](../README.md) 
 | [Getting started](./getting-started.md) | Anyone running the demo |
 | [Demo script](./demo-script.md) | Live presentation |
 | [Architecture](./architecture.md) | How the pieces fit |
+| [Capture](./capture.md) | Where the geometry comes from; wiring a real scanner |
 | [HTTP API](./api.md) | Backend and client authors |
 | [Scene graph](./scene-graph.md) | Anyone changing room JSON |
 | [Frontend](./frontend.md) | Viewer / HUD work |

@@ -55,6 +55,8 @@ Vite proxies `/scene` and `/health` to `http://127.0.0.1:8000` ([vite.config.ts]
 
 Nothing appears at once. The sensor sits mid-room at eye height and turns through one full revolution; every surface resolves when the beam reaches its bearing.
 
+The sweep is **presentation, not measurement**. It runs in the browser after ingest has already returned a complete graph, and re-orders how that graph appears. There is no scanner behind it — see [capture.md](./capture.md) before describing it as live.
+
 [src/scene/scanReveal.ts](../src/scene/scanReveal.ts) owns the geometry and is the part worth testing:
 
 - `scanBearing(x, z, origin)` — position on the turn, `0` at +Z, `0.25` at +X.
