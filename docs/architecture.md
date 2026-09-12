@@ -45,7 +45,7 @@ POST /scene/ask  ──►  { reply, highlightIds }
 Viewer paints ids; edit still writes the twin graph
 ```
 
-Capture and vision are **not started**. Ingest with an empty body clones [backend/app/fixtures.py](../backend/app/fixtures.py) and strips semantics so the reconstruct demo has a before/after.
+Capture and vision are **not started**: no device, no driver, no RoomPlan bridge. Ingest with an empty body clones [backend/app/fixtures.py](../backend/app/fixtures.py) and strips semantics so the reconstruct demo has a before/after. What stands in for a scanner, and what a real one would have to send: [capture.md](./capture.md).
 
 ## Process layout
 
@@ -129,7 +129,7 @@ The viewer builds axis-aligned boxes only. Rotation is stored on the graph but n
 
 ## Extending the pipeline
 
-**RoomPlan / glTF import** should become an ingest path that fills `position` and `size` (and later mesh URLs) without labels. Keep `/scene/ingest` as the seam.
+**RoomPlan / glTF import** should become an ingest path that fills `position` and `size` (and later mesh URLs) without labels. Keep `/scene/ingest` as the seam. Conversion requirements and the gaps to close first: [capture.md](./capture.md#writing-a-real-scanner-client).
 
 **Vision** should attach `type`, `confidence`, and maybe `color` onto capture objects *or* a parallel detections array. Reconstruct can then prefer vision over box heuristics.
 

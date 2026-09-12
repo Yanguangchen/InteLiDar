@@ -11,6 +11,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
+    // The opening sweep is motion; pin the preference so the demo path is stable.
+    reducedMotion: 'no-preference',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [

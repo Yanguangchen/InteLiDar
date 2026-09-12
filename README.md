@@ -15,6 +15,7 @@ This repository is a hackathon MVP. Capture and computer vision are designed in;
 | Capability | Status |
 | --- | --- |
 | Browser 3D viewer (raw wireframe → labelled twin) | Working |
+| Progressive sweep-in: geometry arrives with the sensor beam | Working |
 | Demo LiDAR-style ingest (unlabelled boxes + room bounds) | Working |
 | Reconstruct: labels, materials, analysis log | Working |
 | Spatial assistant: ask → reply + 3D highlights | Working |
@@ -33,10 +34,12 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | [Demo script](./docs/demo-script.md) | Walkthrough for a live presentation |
 | [Design](./design.md) | Engineering map, constraints, build order |
 | [Architecture](./docs/architecture.md) | Layers, data flow, frontend state |
+| [Capture](./docs/capture.md) | What the "scanner" really is, and the ingest seam |
 | [HTTP API](./docs/api.md) | Ingest, reconstruct, ask, examples |
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
 | [Frontend](./docs/frontend.md) | Viewer, HUD, reconstruct UX, edit mode |
 | [Development](./docs/development.md) | TDD, tests, scripts, seams |
+| [Deploy](./docs/deploy.md) | Vercel, env vars, the same-origin requirement |
 | [Roadmap](./docs/roadmap.md) | MVP must-haves, nice-to-haves, later work |
 | [Test audit](./tests/AUDIT.md) | Coverage map and remaining gaps |
 | [Contributing](./CONTRIBUTING.md) | How to change this repo |
@@ -78,11 +81,12 @@ Full walkthrough: [docs/getting-started.md](./docs/getting-started.md).
 
 ## Demo
 
-1. Load the viewer. You see a **raw mesh**: wireframe room, unlabelled boxes, a LiDAR-style sweep.
-2. Press **✨ AI Reconstruct**. Classification steps play in the HUD (`Unknown object → Chair × 4`, and so on).
-3. The scene becomes a **semantic twin**: materials, labels, lighting.
-4. Ask *Show me all the chairs.* Matching objects glow in the canvas.
-5. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Doors and windows stay fixed.
+1. Load the viewer. The sensor **sweeps the room**: returns land where the beam points, and each box resolves as the beam reaches it. Press **Skip** to jump to the end.
+2. The sweep leaves a **raw mesh**: wireframe room, unlabelled boxes, a settled point cloud.
+3. Press **✨ AI Reconstruct**. Classification steps play in the HUD (`Unknown object → Chair × 4`, and so on).
+4. The scene becomes a **semantic twin**, materialising object by object: materials, labels, lighting.
+5. Ask *Show me all the chairs.* Matching objects glow in the canvas, and so do their rows in the scene list.
+6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Doors and windows stay fixed.
 
 Suggested questions once reconstructed:
 
