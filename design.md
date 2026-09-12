@@ -30,7 +30,8 @@ The first slice is a **browser UI over a mock meeting room**, with a FastAPI sce
 | Scene graph API (ingest / reconstruct / ask) | In place |
 | Geometry + demo-id reconstruct | In place |
 | OpenAI ask adapter (stubbed in tests, heuristic fallback) | In place |
-| Vitest for edit / graph rules | In place |
+| Vitest (edit, HUD gating, API client) | In place |
+| Playwright demo E2E | In place |
 | Real LiDAR / RoomPlan import | Not started |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
@@ -134,8 +135,9 @@ src/
   scene/editScene.ts      # drag eligibility + room clamp
   scene/ViewerScene.tsx   # meshes, lights, labels, pointer drag
   scene/types.ts          # scene graph types
-  scene/editScene.test.ts # Vitest: drag rules
 ```
+
+Tests: `src/**/*.test.ts{,x}`, `e2e/demo.spec.ts`. Details: [docs/frontend.md](./docs/frontend.md).
 
 - `App` holds mode, query, reply, `highlightedIds`, edit/drag flags, the ingest graph, and the twin graph.
 - `ViewerScene` is a pure projection of `{ mode, highlightedIds, graph, editing }`.
@@ -171,9 +173,12 @@ TDD targets, in order of leverage:
 3. **Reconstruct** — demo ids labelled, unknown boxes classified by size, analysis steps
 4. **HTTP contract** — ingest → reconstruct → ask; stub reasoner; 400 on blank question
 5. **`moveObject` / `canDragObject`** — furniture moves, openings do not, clamp to room, unknown id is a no-op
-6. **LLM adapter** — given graph JSON, returns valid `{ reply, highlightIds }` (stub the model)
+6. **HUD gating** — reconstruct/ask/edit availability per mode (`Hud.test.tsx`)
+7. **API client** — stub `fetch` for ingest / reconstruct / ask
+8. **Demo E2E** — Playwright reconstruct → ask chairs → Edit (`e2e/demo.spec.ts`)
+9. **LLM adapter** — given graph JSON, returns valid `{ reply, highlightIds }` (stub the model)
 
-Do not start with snapshot tests of the canvas.
+Do not start with snapshot tests of the canvas. Coverage map: [tests/AUDIT.md](./tests/AUDIT.md).
 
 ## MVP build order
 

@@ -2,23 +2,32 @@
 
 Checked against the live product: ingest → reconstruct → ask → edit/drag.
 
-## Already covered
+## Coverage now
 
 | Area | Where | Notes |
 | --- | --- | --- |
 | Demo ingest → unknown objects, stable ids | `backend/tests/test_ingest.py` | Domain |
 | Reconstruct labels + geometry heuristics | `backend/tests/test_reconstruct.py` | Domain |
-| Ask chairs/door/obstacles + hallucinated id filter | `backend/tests/test_ask.py` | Domain |
-| HTTP ingest/reconstruct/ask + stub reasoner | `backend/tests/test_api.py` | API |
+| Ask chairs/door/window/equipment/obstacles + id filter | `backend/tests/test_ask.py` | Domain |
+| HTTP ingest/reconstruct/ask, CORS, placeholder key | `backend/tests/test_api.py` | API |
 | Furniture drag rules (floor, clamp, openings fixed) | `src/scene/editScene.test.ts` | Unit |
+| HUD gating (raw/analysing/twin) + edit affordance | `src/components/Hud.test.tsx` | Component |
+| Frontend API client paths and errors | `src/api/scene.test.ts` | Unit |
+| Demo E2E: reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
 
-## Gaps found
+Run everything with `npm test` (Vitest, pytest, Playwright). How to add tests: [docs/development.md](../docs/development.md).
 
-1. **No E2E.** Nothing booted the Vite app and clicked Reconstruct → Ask → Edit.
-2. **HUD untested.** Reconstruct/ask gating, edit toggle, analysis log, and errors had no component tests.
-3. **API client untested.** `src/api/scene.ts` could break paths or error handling without failing pytest.
-4. **Ask heuristics incomplete.** Window and equipment questions were implemented but not asserted.
-5. **CORS untested.** Vite origin allow-list had no test.
-6. **README was stale.** `npm test` already ran frontend + backend, but the README still said pytest only.
+## Gaps that were closed
 
-WebGL pixel-drag is out of scope for E2E (flaky). Edit is proven by the toggle, hint, and `editScene` unit tests.
+1. No E2E for the demo click-path.
+2. HUD reconstruct/ask/edit gating untested.
+3. `src/api/scene.ts` untested.
+4. Window and equipment ask heuristics unimplemented in tests.
+5. CORS allow-list untested.
+6. `npm test` did not include E2E.
+
+## Still out of scope
+
+- WebGL pixel-drag of a chair (flaky in headless Chromium). Edit is covered by the toggle, hint, and `editScene` unit tests.
+- Live OpenAI network calls (stubbed / heuristic only).
+- Canvas visual regression.

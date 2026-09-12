@@ -15,4 +15,4 @@ InteLiDar is built **test-first**. This is a hard rule.
 
 Prefer tests on domain logic: scene graph queries, reconstruct state, highlight ids, API adapters. Keep Three.js and HUD layout tests thin.
 
-If Vitest is missing, install it as part of the first test. See README.md → Development and design.md → Test seams.
+If Vitest is missing, install it as part of the first test. See docs/development.md, CONTRIBUTING.md, and design.md → Test seams.

@@ -30,13 +30,17 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | Doc | Contents |
 | --- | --- |
 | [Getting started](./docs/getting-started.md) | Install, env, run, troubleshooting |
+| [Demo script](./docs/demo-script.md) | Walkthrough for a live presentation |
 | [Design](./design.md) | Engineering map, constraints, build order |
 | [Architecture](./docs/architecture.md) | Layers, data flow, frontend state |
 | [HTTP API](./docs/api.md) | Ingest, reconstruct, ask, examples |
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
 | [Frontend](./docs/frontend.md) | Viewer, HUD, reconstruct UX, edit mode |
 | [Development](./docs/development.md) | TDD, tests, scripts, seams |
+| [Roadmap](./docs/roadmap.md) | MVP must-haves, nice-to-haves, later work |
 | [Test audit](./tests/AUDIT.md) | Coverage map and remaining gaps |
+| [Contributing](./CONTRIBUTING.md) | How to change this repo |
+| [Docs index](./docs/README.md) | All guides in one list |
 
 ## Quick start
 

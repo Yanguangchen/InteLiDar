@@ -48,17 +48,18 @@ describe('Hud', () => {
 
   it('shows analysis steps while reconstructing and disables edit', () => {
     renderHud({ mode: 'analysing' })
-    expect(screen.getByRole('status')).toHaveTextContent('Table')
-    expect(screen.queryByText('Door')).not.toBeInTheDocument()
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent('Table')
+    expect(status).not.toHaveTextContent('Door')
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
   })
 
   it('turns on the furniture-drag affordance from the edit toggle', async () => {
-    const { user, props } = renderHud()
+    const { user, props, rerender } = renderHud()
     await user.click(screen.getByRole('button', { name: 'Edit' }))
     expect(props.onToggleEdit).toHaveBeenCalledTimes(1)
 
-    renderHud({ editing: true })
+    rerender(<Hud {...props} editing />)
     expect(screen.getByRole('button', { name: 'Editing' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText(/drag tables, chairs, and equipment/i)).toBeInTheDocument()
   })

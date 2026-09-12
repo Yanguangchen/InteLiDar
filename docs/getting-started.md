@@ -87,13 +87,20 @@ The dev server binds `host: true` (see `vite.config.ts`), so phones on the same 
 
 ## Tests
 
+First time on a machine, install Playwright’s Chromium:
+
 ```bash
-npm test                 # frontend + backend
-npm run test:frontend    # vitest run
-npm run test:backend     # pytest via backend/.venv
+npx playwright install chromium
 ```
 
-Frontend tests live in `src/**/*.test.ts`. Backend tests live in `backend/tests/`. See [development.md](./development.md).
+```bash
+npm test                 # Vitest + pytest + Playwright
+npm run test:frontend    # vitest run
+npm run test:backend     # pytest via backend/.venv
+npm run test:e2e         # starts API + Vite unless they are already running
+```
+
+Frontend tests live in `src/**/*.test.ts{,x}`. Backend tests live in `backend/tests/`. E2E lives in `e2e/`. See [development.md](./development.md) and [tests/AUDIT.md](../tests/AUDIT.md).
 
 ## Production-like frontend build
 
@@ -141,3 +148,15 @@ The API allows `http://localhost:5173` and `http://127.0.0.1:5173`. Calling 8000
 **Port already in use**
 
 Stop the other process, or change the Uvicorn `--port` **and** the proxy target in `vite.config.ts` together.
+
+**Playwright: browser not found / `npx playwright test` fails to launch**
+
+```bash
+npx playwright install chromium
+```
+
+E2E expects the API on 8000 and Vite on 5173. Locally it reuses those servers if they are already up. In CI it boots both.
+
+**`npm test` hangs on E2E**
+
+Confirm 8000 and 5173 are free or already serving this app (not some other process). `playwright.config.ts` waits on `/health` and the Vite root.
