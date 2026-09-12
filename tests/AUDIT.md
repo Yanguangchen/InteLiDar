@@ -16,10 +16,13 @@ Checked against the live product: ingest → reconstruct → ask → edit/drag.
 | Sweep clock: timing, skip, reduced motion | `src/scene/useScanProgress.test.ts` | Unit |
 | Canvas animation clock defaults and rate limiting | `src/scene/scanAnim.test.ts` | Unit |
 | Glass specular tracking (`--gx` / `--gy`) | `src/components/useSpecular.test.ts` | Unit |
+| Graphics presets, defaults, persistence, corrupt storage | `src/settings/graphics.test.ts` | Unit |
+| Graphics menu: open/close, switches, presets, escape, click-away | `src/components/GraphicsMenu.test.tsx` | Component |
 | HUD gating (raw/sweeping/analysing/twin), progressive list, row selection | `src/components/Hud.test.tsx` | Component |
 | Frontend API client paths and errors | `src/api/scene.test.ts` | Unit |
 | Demo E2E: sweep → skip → reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
 | Reduced motion skips the sweep end to end | `e2e/demo.spec.ts` | Playwright |
+| Graphics menu drops effects, persists across reload, keeps the demo working | `e2e/demo.spec.ts` | Playwright |
 
 Run everything with `npm test` (Vitest, pytest, Playwright). How to add tests: [docs/development.md](../docs/development.md).
 

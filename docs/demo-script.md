@@ -10,6 +10,7 @@ The demonstration is deliberately simple: **raw scan looks unfinished, reconstru
 - No OpenAI key required. Heuristics cover the three suggestion chips.
 - Reload just before you present: the opening sweep runs once per load and is the best four seconds of the demo.
 - If you have already shown it, or you are short on time, press **Skip** in the capture card.
+- On a borrowed or weak machine, open **Graphics** in the top bar and pick **Balanced** or **Low** before you start. Low drops the point cloud, shadows, beam, blur and animation; the room, the labels, reconstruct and ask all still work. The choice is remembered on that machine.
 
 ## Step 1 — The sweep
 

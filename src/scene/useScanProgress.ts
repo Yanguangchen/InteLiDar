@@ -14,8 +14,8 @@ export type ScanProgress = {
 /**
  * Drives the opening sweep once the scan data is in.
  *
- * The sweep is decoration over data that has already arrived, so anyone who
- * asks for reduced motion gets the finished room straight away.
+ * Whether the sweep should play at all is a graphics setting, not this hook's
+ * call: pass a duration of 0 to hand over a finished scan immediately.
  */
 export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS): ScanProgress {
   const [progress, setProgress] = useState(0)
@@ -30,7 +30,7 @@ export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS):
     if (!active) return
     skipped.current = false
 
-    if (prefersReducedMotion() || durationMs <= 0) {
+    if (durationMs <= 0) {
       setProgress(1)
       return
     }
@@ -52,9 +52,4 @@ export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS):
   }, [active, durationMs])
 
   return { progress, skip }
-}
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }

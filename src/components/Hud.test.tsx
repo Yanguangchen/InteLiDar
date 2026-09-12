@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Hud } from './Hud'
 import { sampleGraph } from '../test/sampleGraph'
+import { PRESETS } from '../settings/graphics'
 import type { ComponentProps } from 'react'
 
 function renderHud(overrides: Partial<ComponentProps<typeof Hud>> = {}) {
@@ -15,6 +16,7 @@ function renderHud(overrides: Partial<ComponentProps<typeof Hud>> = {}) {
     error: null,
     editing: false,
     highlightedIds: [],
+    settings: PRESETS.high,
     analysisSteps: [
       { from: 'Unknown object', to: 'Table' },
       { from: 'Unknown opening', to: 'Door' },
@@ -27,6 +29,7 @@ function renderHud(overrides: Partial<ComponentProps<typeof Hud>> = {}) {
     onReconstruct: vi.fn(),
     onSkipScan: vi.fn(),
     onSelectObject: vi.fn(),
+    onSettingsChange: vi.fn(),
     ...overrides,
   }
   return { user: userEvent.setup(), props, ...render(<Hud {...props} />) }
@@ -108,6 +111,16 @@ describe('Hud', () => {
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /AI Reconstruct/ })).toBeDisabled()
     expect(screen.getByText(/backend unavailable/i)).toBeInTheDocument()
+  })
+
+  it('offers the graphics menu in every mode, including mid-sweep', async () => {
+    const { user, props } = renderHud({ scanProgress: 0.3 })
+    const menu = screen.getByRole('button', { name: /graphics/i })
+    expect(menu).toBeEnabled()
+
+    await user.click(menu)
+    await user.click(screen.getByRole('switch', { name: /point cloud/i }))
+    expect(props.onSettingsChange).toHaveBeenCalledWith({ ...PRESETS.high, pointCloud: false })
   })
 
   it('marks the objects an answer highlighted', () => {

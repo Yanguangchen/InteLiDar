@@ -49,13 +49,15 @@ const TRAIL = [
 type SensorBeaconProps = {
   room: SceneRoom
   anim: ScanAnim
+  /** Draw the glow: the fan, its trail and the floor pulse. The head stays either way. */
+  beam: boolean
 }
 
 /**
  * The scanner itself: a puck on a tripod at eye height whose beam sweeps the
  * room once, then idles. It is the visible cause of everything the cloud does.
  */
-export function SensorBeacon({ room, anim }: SensorBeaconProps) {
+export function SensorBeacon({ room, anim, beam: showBeam }: SensorBeaconProps) {
   const origin = useMemo(() => sensorOrigin(room), [room])
   const reach = useMemo(() => Math.hypot(room.width, room.depth) / 2 + 0.4, [room])
 
@@ -129,7 +131,7 @@ export function SensorBeacon({ room, anim }: SensorBeaconProps) {
 
     if (beam.current) {
       beam.current.rotation.y = rotation
-      beam.current.visible = strength > 0.01
+      beam.current.visible = showBeam && strength > 0.01
     }
     fans.forEach((material, index) => {
       material.uniforms.uOpacity.value = TRAIL[index].opacity * strength
@@ -143,6 +145,7 @@ export function SensorBeacon({ room, anim }: SensorBeaconProps) {
       material.opacity = pulse * (1 - anim.twin)
     }
     if (ring.current) {
+      ring.current.visible = showBeam
       // A ground ring that expands once per turn and fades at the walls.
       const phase = (anim.time * 0.55) % 1
       ring.current.scale.setScalar(0.25 + phase * reach)
