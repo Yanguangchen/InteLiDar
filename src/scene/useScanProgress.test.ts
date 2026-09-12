@@ -50,13 +50,25 @@ describe('useScanProgress', () => {
     expect(result.current.progress).toBe(1)
   })
 
-  it('skips the sweep entirely when motion is reduced', () => {
+  it('lands on a finished scan when the sweep is switched off', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+    const { result } = renderHook(() => useScanProgress(true, 0))
+    expect(result.current.progress).toBe(1)
+  })
+
+  it('leaves the reduced-motion decision to the caller', () => {
+    // Graphics settings own that choice, so someone who switches animation back
+    // on gets the sweep even on a machine that asks for reduced motion.
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
     vi.stubGlobal(
       'matchMedia',
       vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
     )
     const { result } = renderHook(() => useScanProgress(true, DURATION))
-    expect(result.current.progress).toBe(1)
+    expect(result.current.progress).toBe(0)
+
+    advance(DURATION / 2)
+    expect(result.current.progress).toBeGreaterThan(0.2)
+    expect(result.current.progress).toBeLessThan(1)
   })
 })

@@ -162,6 +162,7 @@ body,
 
 .topbar {
   position: absolute;
+  z-index: 30;
   top: 18px;
   left: 18px;
   right: 18px;
@@ -338,6 +339,7 @@ body,
 
 .panel-left {
   position: absolute;
+  z-index: 10;
   top: 96px;
   left: 18px;
   width: 292px;
@@ -693,6 +695,7 @@ body,
 
 .ask {
   position: absolute;
+  z-index: 20;
   left: 18px;
   right: 18px;
   bottom: 18px;
@@ -855,6 +858,209 @@ body,
   box-shadow: 0 0 22px rgba(62, 224, 194, 0.5);
 }
 
+/* ---------------------------------------------------------- graphics menu */
+
+.graphics {
+  position: relative;
+}
+
+.graphics-trigger {
+  cursor: pointer;
+  transition:
+    transform 0.35s var(--ease-spring),
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+.graphics-trigger:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.05));
+}
+
+.graphics-trigger.on {
+  border-color: rgba(122, 162, 255, 0.5);
+  background: linear-gradient(180deg, rgba(122, 162, 255, 0.28), rgba(122, 162, 255, 0.12));
+  color: #dbe6ff;
+}
+
+.graphics-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(320px, calc(100vw - 30px));
+  max-height: min(70vh, 560px);
+  overflow: auto;
+  padding: 16px;
+  border-radius: var(--r-md);
+  /* Denser than the other panels: a menu has to stay readable over a lit scene. */
+  background: var(--glass-sheen), rgba(8, 12, 19, 0.86);
+  animation: drop-in 0.32s var(--ease-liquid) both;
+}
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.preset {
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+.preset:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.preset[aria-pressed='true'] {
+  color: #04120f;
+  background: linear-gradient(180deg, #8ff6e2, var(--accent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.graphics-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.graphics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.graphics-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.graphics-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.graphics-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.graphics-hint {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.track {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: background 0.3s ease;
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #cdd7e3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  transition:
+    transform 0.32s var(--ease-spring),
+    background 0.3s ease;
+}
+
+.graphics-row[aria-checked='true'] .track {
+  background: linear-gradient(180deg, rgba(62, 224, 194, 0.9), rgba(62, 224, 194, 0.55));
+}
+
+.graphics-row[aria-checked='true'] .knob {
+  transform: translateX(16px);
+  background: #04120f;
+}
+
+.graphics-foot {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* ------------------------------------------------- graphics: glass blur off */
+
+/*
+ * backdrop-filter re-blurs whatever is behind the panel, and behind every panel
+ * here is an animating 3D canvas — so it is re-blurred every frame. Off, the
+ * panels go opaque instead; nothing moves but the cost.
+ */
+[data-glass='off'] .glass,
+[data-glass='off'] .label {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-glass='off'] .glass {
+  background: var(--glass-sheen), rgba(7, 11, 17, 0.94);
+}
+
+[data-glass='off'] .glass::before {
+  content: none;
+}
+
+[data-glass='off'] .label {
+  background: rgba(6, 11, 16, 0.92);
+}
+
+[data-glass='off'] .label-hot {
+  background: rgba(20, 78, 68, 0.95);
+}
+
+/* ---------------------------------------------------- graphics: motion off */
+
+[data-motion='off'] *,
+[data-motion='off'] *::before,
+[data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* -------------------------------------------------------------- animations */
 
 @keyframes drop-in {
@@ -953,9 +1159,36 @@ body,
 
   .topbar {
     padding: 10px 12px;
+    gap: 10px;
   }
 
   .tag {
+    display: none;
+  }
+
+  /* The row runs out of width before it runs out of controls. */
+  .brand {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chip {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+
+  .status {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .graphics-trigger-text {
     display: none;
   }
 

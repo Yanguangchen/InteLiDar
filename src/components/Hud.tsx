@@ -1,6 +1,8 @@
 import type { FormEvent, ReactNode } from 'react'
 import type { AnalysisStep, SceneGraph, SceneMode, SceneObject } from '../scene/types'
 import { capturedPoints, revealedObjects } from '../scene/scanReveal'
+import type { GraphicsSettings } from '../settings/graphics'
+import { GraphicsMenu } from './GraphicsMenu'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
@@ -12,6 +14,7 @@ type HudProps = {
   error: string | null
   editing: boolean
   highlightedIds: string[]
+  settings: GraphicsSettings
   analysisSteps: AnalysisStep[]
   visibleStepCount: number
   onToggleEdit: () => void
@@ -21,6 +24,7 @@ type HudProps = {
   onReconstruct: () => void
   onSkipScan: () => void
   onSelectObject: (id: string) => void
+  onSettingsChange: (settings: GraphicsSettings) => void
 }
 
 const SUGGESTIONS = [
@@ -38,6 +42,7 @@ export function Hud({
   error,
   editing,
   highlightedIds,
+  settings,
   analysisSteps,
   visibleStepCount,
   onToggleEdit,
@@ -47,6 +52,7 @@ export function Hud({
   onReconstruct,
   onSkipScan,
   onSelectObject,
+  onSettingsChange,
 }: HudProps) {
   const specular = useSpecular()
   const reconstructed = mode === 'twin'
@@ -88,6 +94,7 @@ export function Hud({
             {mode === 'analysing' && 'Analysing scene'}
             {mode === 'twin' && 'Semantic twin'}
           </div>
+          <GraphicsMenu settings={settings} onChange={onSettingsChange} />
         </div>
       </header>
 

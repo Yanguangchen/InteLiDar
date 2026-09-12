@@ -26,6 +26,7 @@ import {
   sensorOrigin,
   type RevealWindow,
 } from './scanReveal'
+import type { GraphicsSettings } from '../settings/graphics'
 import type { SceneGraph, SceneMode, SceneObject, SceneRoom, Vec3 } from './types'
 
 const FALLBACK_ROOM: SceneRoom = {
@@ -49,6 +50,7 @@ type ViewerSceneProps = {
   mode: SceneMode
   graph: SceneGraph | null
   scanProgress: number
+  settings: GraphicsSettings
   highlightedIds: string[]
   editing: boolean
   dragging: boolean
@@ -60,6 +62,7 @@ export function ViewerScene({
   mode,
   graph,
   scanProgress,
+  settings,
   highlightedIds,
   editing,
   dragging,
@@ -98,7 +101,8 @@ export function ViewerScene({
     // materialisation, and a stalled one must not leave it half applied.
     if (reconstructed) {
       if (twinStart.current < 0) twinStart.current = now
-      anim.twin = Math.min(1, (now - twinStart.current) / (TWIN_DURATION_MS / 1000))
+      const span = settings.motion ? TWIN_DURATION_MS / 1000 : 0
+      anim.twin = span > 0 ? Math.min(1, (now - twinStart.current) / span) : 1
     } else {
       twinStart.current = -1
       anim.twin = 0
@@ -122,7 +126,7 @@ export function ViewerScene({
       <directionalLight
         position={[4.5, 7, 3.5]}
         intensity={reconstructed ? 1.5 : 0.4}
-        castShadow
+        castShadow={settings.shadows}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-bias={-0.0002}
@@ -156,7 +160,7 @@ export function ViewerScene({
         makeDefault
         enableDamping
         enabled={!dragging}
-        autoRotate={sweeping && !dragging}
+        autoRotate={sweeping && settings.motion && !dragging}
         autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
@@ -165,8 +169,8 @@ export function ViewerScene({
       />
 
       <group>
-        <RoomShell room={room} anim={anim} />
-        {graph && <RoomCloud room={room} origin={origin} anim={anim} />}
+        <RoomShell room={room} anim={anim} solo={!settings.pointCloud} />
+        {graph && settings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
 
         {objects.map((object, index) => (
           <SceneMesh
@@ -176,6 +180,7 @@ export function ViewerScene({
             anim={anim}
             window={schedule?.get(object.id) ?? WHOLE_WINDOW}
             materialise={materialiseWindow(index, objects.length)}
+            settings={settings}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
             editing={editing}
@@ -184,7 +189,7 @@ export function ViewerScene({
           />
         ))}
 
-        <SensorBeacon room={room} anim={anim} />
+        <SensorBeacon room={room} anim={anim} beam={settings.beam} />
         <FloorGrid room={room} anim={anim} />
       </group>
     </>
@@ -201,7 +206,16 @@ function RoomCloud({ room, origin, anim }: { room: SceneRoom; origin: Vec3; anim
  * surfaced room the reconstructor infers. The sweep draws the first one in, the
  * twin transition cross-fades to the second.
  */
-function RoomShell({ room, anim }: { room: SceneRoom; anim: ScanAnim }) {
+function RoomShell({
+  room,
+  anim,
+  solo,
+}: {
+  room: SceneRoom
+  anim: ScanAnim
+  /** No return cloud to carry the scan, so the wireframe has to read on its own. */
+  solo: boolean
+}) {
   const raw = useMemo(
     () =>
       new MeshStandardMaterial({
@@ -257,7 +271,7 @@ function RoomShell({ room, anim }: { room: SceneRoom; anim: ScanAnim }) {
   )
 
   useFrame(() => {
-    raw.opacity = anim.scan * (1 - anim.twin) * 0.5
+    raw.opacity = anim.scan * (1 - anim.twin) * (solo ? 0.85 : 0.5)
     if (rawGroup.current) rawGroup.current.visible = raw.opacity > 0.004
 
     surfaces.wall.opacity = anim.twin
@@ -374,6 +388,7 @@ function SceneMesh({
   anim,
   window: scanWindow,
   materialise,
+  settings,
   reconstructed,
   highlighted,
   editing,
@@ -385,6 +400,7 @@ function SceneMesh({
   anim: ScanAnim
   window: RevealWindow
   materialise: RevealWindow
+  settings: GraphicsSettings
   reconstructed: boolean
   highlighted: boolean
   editing: boolean
@@ -526,7 +542,7 @@ function SceneMesh({
     }
   })
 
-  const labelDelay = (materialise.start * TWIN_DURATION_MS) / 1000
+  const labelDelay = settings.motion ? (materialise.start * TWIN_DURATION_MS) / 1000 : 0
 
   return (
     <group position={object.position}>
@@ -558,7 +574,9 @@ function SceneMesh({
         >
           <boxGeometry args={object.size} />
         </mesh>
-        <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
+        {settings.pointCloud && (
+          <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
+        )}
       </group>
 
       {reconstructed && (

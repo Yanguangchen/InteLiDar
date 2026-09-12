@@ -57,6 +57,8 @@ src/scene/useScanProgress.test.ts # sweep timing, skip, reduced motion
 src/api/scene.test.ts            # fetch client
 src/components/Hud.test.tsx      # reconstruct / ask / edit / sweep gating
 src/components/useSpecular.test.ts # glass highlight tracking
+src/components/GraphicsMenu.test.tsx # quality menu behaviour
+src/settings/graphics.test.ts    # presets, defaults, persistence
 src/test/setup.ts                # Testing Library + jest-dom
 src/test/sampleGraph.ts          # shared fixture
 e2e/demo.spec.ts                 # Playwright: sweep → reconstruct → ask chairs → Edit

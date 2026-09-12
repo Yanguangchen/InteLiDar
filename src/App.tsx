@@ -5,6 +5,9 @@ import { Hud } from './components/Hud'
 import { moveObject } from './scene/editScene'
 import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
+import { SCAN_DURATION_MS } from './scene/scanReveal'
+import { dprFor } from './settings/graphics'
+import { useGraphics } from './settings/useGraphics'
 import type { AnalysisStep, SceneGraph, SceneMode, Vec3 } from './scene/types'
 
 export default function App() {
@@ -20,9 +23,15 @@ export default function App() {
   const [editing, setEditing] = useState(false)
   const [dragging, setDragging] = useState(false)
 
+  const [settings, setSettings] = useGraphics()
+
   const displayGraph = mode === 'twin' && twinGraph ? twinGraph : graph
-  // The sweep only starts once there is geometry for the sensor to find.
-  const { progress: scanProgress, skip: skipScan } = useScanProgress(graph !== null)
+  // The sweep only starts once there is geometry for the sensor to find, and a
+  // duration of 0 hands over a finished scan when animation is switched off.
+  const { progress: scanProgress, skip: skipScan } = useScanProgress(
+    graph !== null,
+    settings.motion ? SCAN_DURATION_MS : 0,
+  )
   const scanning = mode === 'raw' && graph !== null && scanProgress < 1
 
   useEffect(() => {
@@ -109,12 +118,22 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <Canvas shadows="percentage" camera={{ position: [6.4, 4.2, 6.8], fov: 42 }} gl={{ antialias: true }}>
+    <div
+      className="app"
+      data-glass={settings.glassBlur ? 'on' : 'off'}
+      data-motion={settings.motion ? 'on' : 'off'}
+    >
+      <Canvas
+        shadows="percentage"
+        dpr={dprFor(settings)}
+        camera={{ position: [6.4, 4.2, 6.8], fov: 42 }}
+        gl={{ antialias: true }}
+      >
         <ViewerScene
           mode={mode}
           graph={displayGraph}
           scanProgress={scanProgress}
+          settings={settings}
           highlightedIds={highlightedIds}
           editing={editing}
           dragging={dragging}
@@ -126,6 +145,7 @@ export default function App() {
         mode={mode}
         graph={displayGraph}
         scanProgress={scanProgress}
+        settings={settings}
         query={query}
         reply={reply}
         error={error}
@@ -144,6 +164,7 @@ export default function App() {
         }}
         onSkipScan={skipScan}
         onSelectObject={onSelectObject}
+        onSettingsChange={setSettings}
       />
     </div>
   )

@@ -16,6 +16,8 @@ src/
   components/
     Hud.tsx               # overlay UI only
     Hud.test.tsx          # mode gating, sweep gating, list selection
+    GraphicsMenu.tsx      # quality presets and per-effect switches
+    GraphicsMenu.test.tsx
     useSpecular.ts        # pointer-tracked highlight for glass panels
     useSpecular.test.ts
   scene/
@@ -33,6 +35,10 @@ src/
     useScanProgress.test.ts
     editScene.ts          # canDragObject, moveObject
     editScene.test.ts
+  settings/
+    graphics.ts           # presets, defaults, persistence, pixel ratio
+    graphics.test.ts
+    useGraphics.ts        # settings state, remembered per device
   test/
     setup.ts              # Testing Library cleanup
     sampleGraph.ts
@@ -66,7 +72,7 @@ The sweep is **presentation, not measurement**. It runs in the browser after ing
 - `revealedObjects(graph, progress)` — what the HUD may list, in graph order.
 - `materialiseWindow(index, count)` — the same idea applied to the twin transition, staggered so objects gain materials one after another.
 
-[src/scene/useScanProgress.ts](../src/scene/useScanProgress.ts) turns that into wall-clock progress over `SCAN_DURATION_MS` (4.6 s), quantised to 1% so the HUD does not re-render every frame. `skip()` jumps to a finished scan. **`prefers-reduced-motion: reduce` returns 1 immediately** — the sweep is decoration over data that has already arrived.
+[src/scene/useScanProgress.ts](../src/scene/useScanProgress.ts) turns that into wall-clock progress over `SCAN_DURATION_MS` (4.6 s), quantised to 1% so the HUD does not re-render every frame. `skip()` jumps to a finished scan. A duration of **0** hands over a finished scan immediately, which is how the Animation setting switches the sweep off; the hook itself does not read `prefers-reduced-motion`, so an explicit choice always wins. See [Graphics settings](#graphics-settings).
 
 ### Return cloud
 
@@ -80,11 +86,30 @@ The sweep is **presentation, not measurement**. It runs in the browser after ing
 
 `twin` is driven from `state.clock.elapsedTime`, not accumulated deltas: a slow first frame must not stretch the materialisation, and a stalled one must not leave it half applied.
 
+## Graphics settings
+
+Every effect the sweep and the glass HUD rely on is optional. [src/settings/graphics.ts](../src/settings/graphics.ts) owns the shape and the presets; [GraphicsMenu](../src/components/GraphicsMenu.tsx) is the popover in the top bar.
+
+| Setting | Turns off | Reached by |
+| --- | --- | --- |
+| `shadows` | `castShadow` on the key light, so no shadow map is rendered | `ViewerScene` |
+| `pointCloud` | Every `ScanPoints` cloud; the raw wireframe brightens to carry the scan alone | `ViewerScene`, `SceneMesh` |
+| `beam` | The fan, its trail and the floor pulse. The scanner head stays — it is the cause of the sweep | `SensorBeacon` |
+| `glassBlur` | `backdrop-filter` on every panel and 3D label; panels go opaque instead | `[data-glass='off']` in CSS |
+| `fullResolution` | Caps the canvas at `dpr` 1 instead of the display's own ratio | `dprFor()` → `<Canvas dpr>` |
+| `motion` | The sweep (duration 0), the twin materialisation (instant), and all CSS animation | `useScanProgress`, `ViewerScene`, `[data-motion='off']` |
+
+Presets are `high` (everything), `balanced` (shadows and pixel ratio off) and `low` (nothing). `activePreset()` reports `custom` for any other mix, so no preset shows as pressed.
+
+Settings are read once on mount from `localStorage` and written on change. **`prefers-reduced-motion: reduce` only supplies the first-run default for `motion`**; a saved choice beats it, so switching animation back on means what it says. Corrupt, partial, or hostile stored JSON falls back field by field, and storage that throws is treated as absent.
+
+The rule for anything added here: it must cost frames and carry no meaning. The room, the labels, reconstruct and ask all work identically at `low`.
+
 ## HUD surfaces
 
 [src/components/Hud.tsx](../src/components/Hud.tsx)
 
-- **Top bar** — brand with a sweeping LiDAR mark, Edit toggle, status pill (`LiDAR capture` / `Raw mesh` / `Analysing scene` / `Semantic twin`)
+- **Top bar** — brand with a sweeping LiDAR mark, Edit toggle, status pill (`LiDAR capture` / `Raw mesh` / `Analysing scene` / `Semantic twin`), and the Graphics menu. The menu is last in the row so its popover cannot overhang a narrow viewport, and it stays live in every mode, including mid-sweep, which is when someone notices the lag.
 - **Left panel** — room name, size, object count, source line, object list. During the sweep, undetected objects are held open as `.ghost` placeholders so the list never jumps.
 - **Object rows** — buttons. Clicking one highlights that object in the canvas; rows carry `aria-pressed` and light up for ask results too.
 - **Centre stage** — capture readout while sweeping, Reconstruct CTA once swept, the analysis `<ol>` in `analysing`, nothing in `twin`
@@ -138,7 +163,9 @@ Ask: only if `mode === 'twin'` and `twinGraph` and non-empty question. Sets `rep
 Do not snapshot WebGL. Cover:
 
 - `scanReveal` / `scanCloud` / `scanAnim` — sweep geometry, sampling, easing
-- `useScanProgress` — timing, skip, reduced motion
+- `useScanProgress` — timing, skip, a disabled sweep
+- `graphics` — presets, defaults, persistence, hostile stored JSON
+- `GraphicsMenu` — open/close, switch state, presets, escape and click-away
 - `canDragObject` / `moveObject`
 - `Hud` enabled/disabled controls per mode and per sweep state
 - API client paths (`src/api/scene.test.ts`)
