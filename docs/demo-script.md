@@ -15,7 +15,9 @@ The demonstration is deliberately simple: **raw scan looks unfinished, reconstru
 
 On load the sensor turns on the spot and the room arrives with it. Returns land where the beam points, boxes resolve one at a time behind it, and the capture card counts returns and volumes found. Nothing is drawn before the beam reaches it.
 
-Talking point: this is a scan, not a download. The geometry exists because something measured it.
+Talking point: geometry like this comes from measurement, not from a model's imagination — that is the premise of the product.
+
+Do not claim a live scanner. There is no hardware behind the sweep; it replays a demo room the backend already had ([capture.md](./capture.md)). If someone asks, the Source row in the left panel says *LiDAR demo mesh*, and the honest answer is that `/scene/ingest` is the seam a real device would POST to.
 
 ## Step 2 — Raw capture
 
