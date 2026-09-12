@@ -1,4 +1,17 @@
 import type { SceneGraph, SceneObject, Vec3 } from './types'
+import { FINISHES, SHAPES, type AppearancePatch } from './appearance'
+import { Euler, Matrix4 } from 'three'
+
+export function updateAppearance(graph: SceneGraph, id: string, patch: AppearancePatch): SceneGraph {
+  const target = graph.objects.find((object) => object.id === id)
+  if (!target) return graph
+  const valid: AppearancePatch = {}
+  if (patch.color && /^#[0-9a-f]{6}$/i.test(patch.color)) valid.color = patch.color
+  if (patch.material && FINISHES.some((finish) => finish === patch.material)) valid.material = patch.material
+  if (patch.shape && (SHAPES[target.type] ?? ['rounded', 'rectangular']).includes(patch.shape)) valid.shape = patch.shape
+  if (!Object.keys(valid).length) return graph
+  return { ...graph, objects: graph.objects.map((object) => object.id === id ? { ...object, ...valid } : object) }
+}
 
 const DRAGGABLE = new Set(['furniture', 'equipment'])
 
@@ -30,8 +43,9 @@ export function moveObject(graph: SceneGraph, id: string, next: Vec3): SceneGrap
 function clampToRoom(graph: SceneGraph, object: SceneObject, next: Vec3): Vec3 {
   const halfW = graph.room.width / 2
   const halfD = graph.room.depth / 2
-  const insetX = object.size[0] / 2
-  const insetZ = object.size[2] / 2
+  const matrix = new Matrix4().makeRotationFromEuler(new Euler(...(object.rotation ?? [0, 0, 0]))).elements
+  const insetX = (Math.abs(matrix[0]) * object.size[0] + Math.abs(matrix[4]) * object.size[1] + Math.abs(matrix[8]) * object.size[2]) / 2
+  const insetZ = (Math.abs(matrix[2]) * object.size[0] + Math.abs(matrix[6]) * object.size[1] + Math.abs(matrix[10]) * object.size[2]) / 2
   return [
     clamp(next[0], -halfW + insetX, halfW - insetX),
     object.position[1],

@@ -22,9 +22,11 @@ export type SceneObject = {
   material?: string | null
   confidence?: number | null
   color?: string | null
+  shape?: string | null
 }
 
 export type SceneGraph = {
+  source?: 'demo' | 'roomplan'
   room: SceneRoom
   objects: SceneObject[]
 }
