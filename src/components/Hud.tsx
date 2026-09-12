@@ -27,6 +27,8 @@ type HudProps = {
   onSelectObject: (id: string) => void
   onSettingsChange: (settings: GraphicsSettings) => void
   onImportCapture?: (graph: SceneGraph) => void
+  renovating?: boolean
+  onToggleRenovation?: () => void
 }
 
 const SUGGESTIONS = [
@@ -56,6 +58,8 @@ export function Hud({
   onSelectObject,
   onSettingsChange,
   onImportCapture,
+  renovating,
+  onToggleRenovation,
 }: HudProps) {
   const specular = useSpecular()
   const reconstructed = mode === 'twin'
@@ -79,6 +83,7 @@ export function Hud({
         </div>
         <div className="topbar-actions">
           {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
+          {onToggleRenovation && <button type="button" className={`chip ${renovating ? 'on' : ''}`} aria-pressed={Boolean(renovating)} disabled={!reconstructed} onClick={onToggleRenovation}>Renovate</button>}
           <button
             type="button"
             className={`chip edit-toggle ${editing ? 'on' : ''}`}

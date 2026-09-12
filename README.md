@@ -87,6 +87,7 @@ Full walkthrough: [docs/getting-started.md](./docs/getting-started.md).
 4. The scene becomes a **semantic twin**, materialising object by object: materials, labels, lighting.
 5. Ask *Show me all the chairs.* Matching objects glow in the canvas, and so do their rows in the scene list.
 6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Select an object in **Appearance** to change its shape, textured material, and color. Doors and windows stay fixed in position; their appearance can still change. Appearance edits last for the current page session.
+7. Open **Renovate** to browse 26 models from `models/`, preview them, and add furniture at its real-world scale. Select existing or added furniture to rotate or remove it; **Undo** reverses the last add or removal. See the [renovation guide](docs/renovation.md). Layout changes last for the current page session.
 
 Suggested questions once reconstructed:
 

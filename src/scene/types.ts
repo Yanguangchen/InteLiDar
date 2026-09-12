@@ -23,6 +23,8 @@ export type SceneObject = {
   confidence?: number | null
   color?: string | null
   shape?: string | null
+  /** Catalog model id from models/manifest.json; absent on captured/procedural objects. */
+  assetId?: string | null
 }
 
 export type SceneGraph = {

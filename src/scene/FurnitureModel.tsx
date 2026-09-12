@@ -5,16 +5,23 @@ import { buildFurnitureModel } from './buildFurnitureModel'
 import { revealAmount, type RevealWindow } from './scanReveal'
 import type { ScanAnim } from './scanAnim'
 import type { SceneObject } from './types'
+import { CatalogFurniture } from './CatalogFurniture'
 
 const ACCENT = new Color('#3ee0c2')
 
-export function FurnitureModel({ object, anim, materialise, highlighted, draggable }: {
+export type FurnitureModelProps = {
   object: SceneObject
   anim: ScanAnim
   materialise: RevealWindow
   highlighted: boolean
   draggable: boolean
-}) {
+}
+
+export function FurnitureModel(props: FurnitureModelProps) {
+  return props.object.assetId ? <CatalogFurniture {...props} /> : <ProceduralFurniture {...props} />
+}
+
+function ProceduralFurniture({ object, anim, materialise, highlighted, draggable }: FurnitureModelProps) {
   const [width, height, depth] = object.size
   const model = useMemo(() => buildFurnitureModel({
     ...object, size: [width, height, depth],

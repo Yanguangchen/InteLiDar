@@ -38,6 +38,15 @@ def test_roomplan_reconstruction_preserves_device_labels_without_demo_id_lookup(
     assert result.graph.objects[0].rotation == (0, 1.2, 0)
 
 
+def test_catalog_model_survives_reconstruction_and_camel_case_transport() -> None:
+    graph = ingest_capture(IngestRequest())
+    graph.objects.append(SceneObject(id="added-sofa", type="sofa", label="Two-seat sofa", category="furniture",
+                                     position=(0, 0.43, 0), size=(1.62, 0.86, 0.86), assetId="sofa_2seat"))
+    result = reconstruct_scene(graph).graph
+    assert result.objects[-1].type == "sofa"
+    assert result.model_dump(by_alias=True)["objects"][-1]["assetId"] == "sofa_2seat"
+
+
 def test_reconstruct_keeps_ids_and_labels_demo_objects() -> None:
     raw = ingest_capture(IngestRequest())
     result = reconstruct_scene(raw)
