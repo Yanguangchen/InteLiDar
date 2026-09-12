@@ -1,8 +1,31 @@
 import { Html, OrbitControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Plane, Vector2, Vector3, type Mesh } from 'three'
+import {
+  Color,
+  DoubleSide,
+  MeshStandardMaterial,
+  Plane,
+  Vector2,
+  Vector3,
+  type GridHelper,
+  type Group,
+  type LineBasicMaterial,
+  type Mesh,
+} from 'three'
 import { canDragObject } from './editScene'
+import { ScanPoints } from './ScanPoints'
+import { SensorBeacon } from './SensorBeacon'
+import { approach, createScanAnim, type ScanAnim } from './scanAnim'
+import { buildObjectCloud, buildRoomCloud } from './scanCloud'
+import {
+  TWIN_DURATION_MS,
+  materialiseWindow,
+  revealAmount,
+  scanSchedule,
+  sensorOrigin,
+  type RevealWindow,
+} from './scanReveal'
 import type { SceneGraph, SceneMode, SceneObject, SceneRoom, Vec3 } from './types'
 
 const FALLBACK_ROOM: SceneRoom = {
@@ -14,6 +37,10 @@ const FALLBACK_ROOM: SceneRoom = {
   units: 'm',
 }
 
+const ACCENT = '#3ee0c2'
+/** Objects with no scan window of their own are simply there. */
+const WHOLE_WINDOW: RevealWindow = { start: 0, end: 0.0001 }
+
 const floorHit = new Vector3()
 const floorNdc = new Vector2()
 const floorPlane = new Plane(new Vector3(0, 1, 0), 0)
@@ -21,6 +48,7 @@ const floorPlane = new Plane(new Vector3(0, 1, 0), 0)
 type ViewerSceneProps = {
   mode: SceneMode
   graph: SceneGraph | null
+  scanProgress: number
   highlightedIds: string[]
   editing: boolean
   dragging: boolean
@@ -31,6 +59,7 @@ type ViewerSceneProps = {
 export function ViewerScene({
   mode,
   graph,
+  scanProgress,
   highlightedIds,
   editing,
   dragging,
@@ -39,39 +68,114 @@ export function ViewerScene({
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
   const room = graph?.room ?? FALLBACK_ROOM
-  const objects = graph?.objects ?? []
+  const objects = useMemo(() => graph?.objects ?? [], [graph])
+  const anim = useMemo(createScanAnim, [])
+  const origin = useMemo(() => sensorOrigin(room), [room])
+  const schedule = useMemo(() => (graph ? scanSchedule(graph) : null), [graph])
+  const sweeping = mode === 'raw' && scanProgress < 1
+
+  const palette = useMemo(
+    () => ({ raw: new Color('#05070a'), twin: new Color('#0b1016'), current: new Color('#05070a') }),
+    [],
+  )
+
+  const twinStart = useRef(-1)
+
+  useFrame((state, delta) => {
+    const step = Math.min(delta, 0.1)
+    const now = state.clock.elapsedTime
+    anim.time = now
+
+    // Track the HUD's sweep clock, but fast enough to catch up when it is skipped.
+    anim.scan = approach(
+      anim.scan,
+      scanProgress,
+      Math.max(1.6, Math.abs(scanProgress - anim.scan) * 6),
+      step,
+    )
+
+    // Wall-clock, not accumulated deltas: a slow first frame must not stretch the
+    // materialisation, and a stalled one must not leave it half applied.
+    if (reconstructed) {
+      if (twinStart.current < 0) twinStart.current = now
+      anim.twin = Math.min(1, (now - twinStart.current) / (TWIN_DURATION_MS / 1000))
+    } else {
+      twinStart.current = -1
+      anim.twin = 0
+    }
+
+    anim.think = approach(anim.think, mode === 'analysing' ? 1 : 0, 1.6, step)
+    anim.cloud = 1 - anim.twin
+
+    palette.current.copy(palette.raw).lerp(palette.twin, anim.twin)
+    state.scene.background = palette.current
+    if (state.scene.fog) state.scene.fog.color.copy(palette.current)
+  }, -1)
 
   return (
     <>
-      <color attach="background" args={[reconstructed ? '#0c1218' : '#08090c']} />
-      <fog attach="fog" args={[reconstructed ? '#0c1218' : '#08090c', 8, 22]} />
+      <fog attach="fog" args={['#05070a', 9, 26]} />
 
-      <hemisphereLight args={[reconstructed ? '#d8e4ff' : '#9aa3b2', '#1a1c20', reconstructed ? 0.7 : 0.35]} />
-      <directionalLight
-        position={[4, 7, 3]}
-        intensity={reconstructed ? 1.35 : 0.55}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+      <hemisphereLight
+        args={[reconstructed ? '#e3ecff' : '#8f9aac', '#1a1f27', reconstructed ? 0.95 : 0.28]}
       />
-      {reconstructed && <pointLight position={[0, 2.4, 0]} intensity={0.4} color="#f2e6c9" />}
+      <directionalLight
+        position={[4.5, 7, 3.5]}
+        intensity={reconstructed ? 1.5 : 0.4}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-bias={-0.0002}
+        shadow-normalBias={0.06}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
+        shadow-camera-near={0.5}
+        shadow-camera-far={28}
+      />
+      {reconstructed && <directionalLight position={[-5, 4, -4.5]} intensity={0.45} color="#cfe0ff" />}
+      {reconstructed && (
+        <>
+          <pointLight
+            position={[0, room.height - 0.4, 0]}
+            intensity={1.4}
+            distance={9}
+            color="#ffe9c4"
+          />
+          <pointLight
+            position={[room.width / 2 - 0.4, 1.6, 0]}
+            intensity={1.1}
+            distance={7}
+            color="#a9d4ff"
+          />
+        </>
+      )}
 
       <OrbitControls
         makeDefault
         enableDamping
         enabled={!dragging}
+        autoRotate={sweeping && !dragging}
+        autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
         maxDistance={16}
         target={[0, 1, 0]}
       />
 
-      <group position={[0, 0, 0]}>
-        <RoomShell reconstructed={reconstructed} room={room} />
-        {objects.map((object) => (
+      <group>
+        <RoomShell room={room} anim={anim} />
+        {graph && <RoomCloud room={room} origin={origin} anim={anim} />}
+
+        {objects.map((object, index) => (
           <SceneMesh
             key={object.id}
             object={object}
+            origin={origin}
+            anim={anim}
+            window={schedule?.get(object.id) ?? WHOLE_WINDOW}
+            materialise={materialiseWindow(index, objects.length)}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
             editing={editing}
@@ -79,63 +183,197 @@ export function ViewerScene({
             onMoveObject={onMoveObject}
           />
         ))}
-        {mode !== 'twin' && <ScanSweep room={room} />}
-        <gridHelper
-          args={[12, 24, reconstructed ? '#1e3a3a' : '#1c2430', reconstructed ? '#15222a' : '#12161c']}
-          position={[0, 0.001, 0]}
+
+        <SensorBeacon room={room} anim={anim} />
+        <FloorGrid room={room} anim={anim} />
+      </group>
+    </>
+  )
+}
+
+function RoomCloud({ room, origin, anim }: { room: SceneRoom; origin: Vec3; anim: ScanAnim }) {
+  const cloud = useMemo(() => buildRoomCloud(room, origin), [room, origin])
+  return <ScanPoints cloud={cloud} anim={anim} size={0.05} hot="#9ef7e5" cool="#2b6e80" />
+}
+
+/**
+ * Two shells in the same place: the wireframe the sensor measured, and the
+ * surfaced room the reconstructor infers. The sweep draws the first one in, the
+ * twin transition cross-fades to the second.
+ */
+function RoomShell({ room, anim }: { room: SceneRoom; anim: ScanAnim }) {
+  const raw = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: new Color('#39516b'),
+        wireframe: true,
+        transparent: true,
+        opacity: 0,
+        roughness: 1,
+        side: DoubleSide,
+      }),
+    [],
+  )
+
+  const surfaces = useMemo(
+    () => ({
+      wall: new MeshStandardMaterial({
+        color: new Color('#d9d3c7'),
+        roughness: 0.86,
+        transparent: true,
+        opacity: 0,
+      }),
+      floor: new MeshStandardMaterial({
+        color: new Color('#b08968'),
+        roughness: 0.74,
+        transparent: true,
+        opacity: 0,
+      }),
+      ceiling: new MeshStandardMaterial({
+        color: new Color('#ece8df'),
+        roughness: 0.95,
+        transparent: true,
+        opacity: 0,
+      }),
+      openWall: new MeshStandardMaterial({
+        color: new Color('#cfd8dc'),
+        roughness: 0.7,
+        transparent: true,
+        opacity: 0,
+      }),
+    }),
+    [],
+  )
+
+  const rawGroup = useRef<Group>(null)
+  const twinGroup = useRef<Group>(null)
+
+  useEffect(
+    () => () => {
+      raw.dispose()
+      Object.values(surfaces).forEach((material) => material.dispose())
+    },
+    [raw, surfaces],
+  )
+
+  useFrame(() => {
+    raw.opacity = anim.scan * (1 - anim.twin) * 0.5
+    if (rawGroup.current) rawGroup.current.visible = raw.opacity > 0.004
+
+    surfaces.wall.opacity = anim.twin
+    surfaces.floor.opacity = anim.twin
+    surfaces.ceiling.opacity = anim.twin
+    surfaces.openWall.opacity = anim.twin * 0.38
+
+    // Opaque once the transition lands, so the twin keeps crisp shadows.
+    const settled = anim.twin >= 1
+    surfaces.wall.transparent = !settled
+    surfaces.floor.transparent = !settled
+    surfaces.ceiling.transparent = !settled
+    if (twinGroup.current) twinGroup.current.visible = anim.twin > 0.004
+  })
+
+  return (
+    <>
+      <group ref={rawGroup}>
+        <Shell room={room} wall={raw} floor={raw} ceiling={raw} openWall={raw} />
+      </group>
+      <group ref={twinGroup}>
+        <Shell
+          room={room}
+          wall={surfaces.wall}
+          floor={surfaces.floor}
+          ceiling={surfaces.ceiling}
+          openWall={surfaces.openWall}
+          shadows
         />
       </group>
     </>
   )
 }
 
-function RoomShell({ reconstructed, room }: { reconstructed: boolean; room: SceneRoom }) {
-  const wall = reconstructed ? '#d9d3c7' : '#2a2d33'
-  const floor = reconstructed ? '#b08968' : '#30343b'
-  const ceiling = reconstructed ? '#ece8df' : '#24272c'
-  const roughness = reconstructed ? 0.82 : 1
-  const wireframe = !reconstructed
-
+function Shell({
+  room,
+  wall,
+  floor,
+  ceiling,
+  openWall,
+  shadows = false,
+}: {
+  room: SceneRoom
+  wall: MeshStandardMaterial
+  floor: MeshStandardMaterial
+  ceiling: MeshStandardMaterial
+  openWall: MeshStandardMaterial
+  shadows?: boolean
+}) {
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} material={floor} receiveShadow={shadows}>
         <planeGeometry args={[room.width, room.depth]} />
-        <meshStandardMaterial color={floor} roughness={roughness} wireframe={wireframe} />
       </mesh>
-
-      <mesh position={[0, room.height, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, room.height, 0]} rotation={[Math.PI / 2, 0, 0]} material={ceiling}>
         <planeGeometry args={[room.width, room.depth]} />
-        <meshStandardMaterial color={ceiling} roughness={0.95} wireframe={wireframe} side={2} />
       </mesh>
-
-      <mesh position={[0, room.height / 2, -room.depth / 2]} receiveShadow>
+      <mesh position={[0, room.height / 2, -room.depth / 2]} material={wall} receiveShadow={shadows}>
         <planeGeometry args={[room.width, room.height]} />
-        <meshStandardMaterial color={wall} roughness={roughness} wireframe={wireframe} />
       </mesh>
-      <mesh position={[0, room.height / 2, room.depth / 2]} rotation={[0, Math.PI, 0]} receiveShadow>
+      <mesh
+        position={[0, room.height / 2, room.depth / 2]}
+        rotation={[0, Math.PI, 0]}
+        material={wall}
+        receiveShadow={shadows}
+      >
         <planeGeometry args={[room.width, room.height]} />
-        <meshStandardMaterial color={wall} roughness={roughness} wireframe={wireframe} />
       </mesh>
-      <mesh position={[-room.width / 2, room.height / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+      <mesh
+        position={[-room.width / 2, room.height / 2, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        material={wall}
+        receiveShadow={shadows}
+      >
         <planeGeometry args={[room.depth, room.height]} />
-        <meshStandardMaterial color={wall} roughness={roughness} wireframe={wireframe} />
       </mesh>
-      <mesh position={[room.width / 2, room.height / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+      <mesh
+        position={[room.width / 2, room.height / 2, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        material={openWall}
+        receiveShadow={shadows}
+      >
         <planeGeometry args={[room.depth, room.height]} />
-        <meshStandardMaterial
-          color={reconstructed ? '#cfd8dc' : wall}
-          roughness={roughness}
-          wireframe={wireframe}
-          transparent={reconstructed}
-          opacity={reconstructed ? 0.35 : 1}
-        />
       </mesh>
     </group>
   )
 }
 
+function FloorGrid({ room, anim }: { room: SceneRoom; anim: ScanAnim }) {
+  const grid = useRef<GridHelper>(null)
+  const size = useMemo(() => Math.round(Math.max(room.width, room.depth) + 4), [room])
+
+  useEffect(() => {
+    const material = grid.current?.material as LineBasicMaterial | undefined
+    if (!material) return
+    material.transparent = true
+    material.opacity = 0
+  }, [])
+
+  useFrame(() => {
+    const target = grid.current
+    if (!target) return
+    const material = target.material as LineBasicMaterial
+    material.opacity = anim.scan * (1 - anim.twin) * 0.45
+    target.visible = material.opacity > 0.004
+  })
+
+  return <gridHelper ref={grid} args={[size, size * 2, '#1d3b4a', '#132029']} position={[0, 0.002, 0]} />
+}
+
 function SceneMesh({
   object,
+  origin,
+  anim,
+  window: scanWindow,
+  materialise,
   reconstructed,
   highlighted,
   editing,
@@ -143,6 +381,10 @@ function SceneMesh({
   onMoveObject,
 }: {
   object: SceneObject
+  origin: Vec3
+  anim: ScanAnim
+  window: RevealWindow
+  materialise: RevealWindow
   reconstructed: boolean
   highlighted: boolean
   editing: boolean
@@ -157,9 +399,68 @@ function SceneMesh({
   objectRef.current = object
   moveRef.current = onMoveObject
   dragChangeRef.current = onDraggingChange
+
   const draggable = editing && canDragObject(object)
-  const color = reconstructed ? object.color ?? '#8d8d8d' : '#6a717c'
-  const isGlass = reconstructed && object.material === 'glass'
+  const isGlass = object.material === 'glass'
+
+  // Keyed on identity, not position: the returns belong to the object and travel
+  // with it, so dragging furniture never re-scans the room.
+  const cloudKey = `${object.id}:${object.size.join(',')}`
+  const cloud = useMemo(
+    () => buildObjectCloud(objectRef.current, origin),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cloudKey, origin],
+  )
+
+  const tones = useMemo(
+    () => ({
+      base: new Color(object.color ?? '#8d8d8d'),
+      hot: new Color('#8ff0de'),
+      accent: new Color(ACCENT),
+      off: new Color('#000000'),
+    }),
+    [object.color],
+  )
+
+  const rawMaterial = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: new Color('#6a717c'),
+        wireframe: true,
+        transparent: true,
+        opacity: 0,
+        roughness: 1,
+        emissive: new Color(ACCENT),
+        emissiveIntensity: 0,
+      }),
+    [],
+  )
+
+  const twinMaterial = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: new Color(object.color ?? '#8d8d8d'),
+        roughness: isGlass ? 0.1 : 0.68,
+        metalness: object.material === 'metal' ? 0.45 : 0,
+        transparent: true,
+        opacity: 0,
+        emissive: new Color(ACCENT),
+        emissiveIntensity: 0,
+      }),
+    [object.color, object.material, isGlass],
+  )
+
+  const shell = useRef<Group>(null)
+  const rawMesh = useRef<Mesh>(null)
+  const twinMesh = useRef<Mesh>(null)
+
+  useEffect(
+    () => () => {
+      rawMaterial.dispose()
+      twinMaterial.dispose()
+    },
+    [rawMaterial, twinMaterial],
+  )
 
   useEffect(() => {
     function projectClient(clientX: number, clientY: number) {
@@ -194,68 +495,88 @@ function SceneMesh({
     }
   }, [camera, gl, raycaster])
 
+  useFrame(() => {
+    const found = revealAmount(anim.scan, scanWindow)
+    const solid = revealAmount(anim.twin, materialise)
+
+    if (shell.current) {
+      // A box arrives slightly over size, then settles, the way a solver
+      // tightens a bounding box as more returns land on it.
+      const overshoot = found < 1 ? 1 + Math.sin(found * Math.PI) * 0.06 : 1
+      shell.current.scale.setScalar((0.55 + 0.45 * found) * overshoot)
+      shell.current.position.y = (1 - found) * -0.12
+      shell.current.visible = found > 0.004
+    }
+
+    rawMaterial.opacity = found * (1 - solid) * 0.95
+    // Fresh returns flare, then cool to the wireframe colour.
+    rawMaterial.emissiveIntensity = (1 - found) ** 2 * 1.6 + anim.think * 0.4
+    if (rawMesh.current) rawMesh.current.visible = rawMaterial.opacity > 0.004
+
+    const glow = highlighted ? 0.45 + Math.sin(anim.time * 4.2) * 0.18 : draggable ? 0.12 : 0
+    twinMaterial.opacity = solid * (isGlass ? 0.38 : 1)
+    twinMaterial.transparent = isGlass || solid < 1 || highlighted
+    twinMaterial.emissiveIntensity = glow * solid
+    twinMaterial.emissive.copy(highlighted || draggable ? tones.accent : tones.off)
+    twinMaterial.color.copy(highlighted ? tones.hot : tones.base)
+    if (twinMesh.current) {
+      twinMesh.current.visible = solid > 0.004
+      // The last centimetre of the lift into place.
+      twinMesh.current.position.y = (1 - solid) * 0.06
+    }
+  })
+
+  const labelDelay = (materialise.start * TWIN_DURATION_MS) / 1000
+
   return (
     <group position={object.position}>
-      <mesh
-        castShadow
-        receiveShadow
-        onPointerOver={(event) => {
-          if (!draggable) return
-          event.stopPropagation()
-          document.body.style.cursor = 'grab'
-        }}
-        onPointerOut={() => {
-          if (!dragging.current) document.body.style.cursor = 'auto'
-        }}
-        onPointerDown={(event) => {
-          if (!draggable) return
-          event.stopPropagation()
-          event.nativeEvent.stopImmediatePropagation()
-          dragging.current = true
-          onDraggingChange(true)
-          document.body.style.cursor = 'grabbing'
-        }}
-      >
-        <boxGeometry args={object.size} />
-        <meshStandardMaterial
-          color={highlighted || (editing && draggable) ? (highlighted ? '#3ee0c2' : color) : color}
-          roughness={isGlass ? 0.12 : reconstructed ? 0.7 : 1}
-          metalness={object.material === 'metal' && reconstructed ? 0.45 : 0}
-          wireframe={!reconstructed}
-          transparent={isGlass || highlighted}
-          opacity={isGlass ? 0.35 : highlighted ? 0.92 : 1}
-          emissive={highlighted ? '#3ee0c2' : draggable ? '#3ee0c2' : '#000000'}
-          emissiveIntensity={highlighted ? 0.55 : draggable ? 0.12 : 0}
-        />
-      </mesh>
+      <group ref={shell}>
+        <mesh ref={rawMesh} material={rawMaterial}>
+          <boxGeometry args={object.size} />
+        </mesh>
+        <mesh
+          ref={twinMesh}
+          material={twinMaterial}
+          castShadow
+          receiveShadow
+          onPointerOver={(event) => {
+            if (!draggable) return
+            event.stopPropagation()
+            document.body.style.cursor = 'grab'
+          }}
+          onPointerOut={() => {
+            if (!dragging.current) document.body.style.cursor = 'auto'
+          }}
+          onPointerDown={(event) => {
+            if (!draggable) return
+            event.stopPropagation()
+            event.nativeEvent.stopImmediatePropagation()
+            dragging.current = true
+            onDraggingChange(true)
+            document.body.style.cursor = 'grabbing'
+          }}
+        >
+          <boxGeometry args={object.size} />
+        </mesh>
+        <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
+      </group>
+
       {reconstructed && (
         <Html
-          position={[0, object.size[1] / 2 + 0.18, 0]}
+          position={[0, object.size[1] / 2 + 0.2, 0]}
           center
           distanceFactor={8}
           occlude={false}
           style={{ pointerEvents: 'none' }}
         >
-          <div className={`label ${highlighted ? 'label-hot' : ''}`}>{object.label}</div>
+          <div
+            className={`label ${highlighted ? 'label-hot' : ''}`}
+            style={{ animationDelay: `${labelDelay.toFixed(2)}s` }}
+          >
+            {object.label}
+          </div>
         </Html>
       )}
     </group>
-  )
-}
-
-function ScanSweep({ room }: { room: SceneRoom }) {
-  const ref = useRef<Mesh>(null)
-  const geometry = useMemo(() => [room.width, 0.035] as const, [room.width])
-
-  useFrame((state) => {
-    if (!ref.current) return
-    ref.current.position.z = Math.sin(state.clock.elapsedTime * 0.55) * (room.depth / 2 - 0.15)
-  })
-
-  return (
-    <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-      <planeGeometry args={geometry} />
-      <meshBasicMaterial color="#3ee0c2" transparent opacity={0.55} />
-    </mesh>
   )
 }

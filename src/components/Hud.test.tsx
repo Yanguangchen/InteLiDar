@@ -9,10 +9,12 @@ function renderHud(overrides: Partial<ComponentProps<typeof Hud>> = {}) {
   const props: ComponentProps<typeof Hud> = {
     mode: 'raw',
     graph: sampleGraph,
+    scanProgress: 1,
     query: '',
     reply: null,
     error: null,
     editing: false,
+    highlightedIds: [],
     analysisSteps: [
       { from: 'Unknown object', to: 'Table' },
       { from: 'Unknown opening', to: 'Door' },
@@ -23,6 +25,8 @@ function renderHud(overrides: Partial<ComponentProps<typeof Hud>> = {}) {
     onAsk: vi.fn((event) => event.preventDefault()),
     onAskSuggestion: vi.fn(),
     onReconstruct: vi.fn(),
+    onSkipScan: vi.fn(),
+    onSelectObject: vi.fn(),
     ...overrides,
   }
   return { user: userEvent.setup(), props, ...render(<Hud {...props} />) }
@@ -67,5 +71,57 @@ describe('Hud', () => {
   it('surfaces backend errors in the ask bar', () => {
     renderHud({ error: 'Backend unavailable. Start the API on port 8000.' })
     expect(screen.getByText(/backend unavailable/i)).toBeInTheDocument()
+  })
+
+  it('reports sweep progress instead of the reconstruct CTA while capturing', () => {
+    renderHud({ scanProgress: 0.02 })
+    expect(screen.queryByRole('button', { name: /AI Reconstruct/ })).not.toBeInTheDocument()
+    expect(screen.getByText('LiDAR capture')).toBeInTheDocument()
+
+    const meter = screen.getByRole('progressbar', { name: /lidar capture/i })
+    expect(meter).toHaveAttribute('aria-valuenow', '2')
+    expect(meter).toHaveAttribute('aria-valuemax', '100')
+  })
+
+  it('lists objects only once the sweep has found them', () => {
+    const { rerender, props } = renderHud({ scanProgress: 0.02 })
+    expect(screen.getByText('Conference table')).toBeInTheDocument()
+    expect(screen.queryByText('Door')).not.toBeInTheDocument()
+
+    rerender(<Hud {...props} scanProgress={1} />)
+    expect(screen.getByText('Door')).toBeInTheDocument()
+  })
+
+  it('lets a presenter skip the opening sweep', async () => {
+    const { user, props } = renderHud({ scanProgress: 0.3 })
+    await user.click(screen.getByRole('button', { name: /skip/i }))
+    expect(props.onSkipScan).toHaveBeenCalledTimes(1)
+  })
+
+  it('holds edit closed until the sweep completes', () => {
+    renderHud({ scanProgress: 0.3 })
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('does not pretend to scan when the backend never answered', () => {
+    renderHud({ graph: null, scanProgress: 0, error: 'Backend unavailable. Start the API on port 8000.' })
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /AI Reconstruct/ })).toBeDisabled()
+    expect(screen.getByText(/backend unavailable/i)).toBeInTheDocument()
+  })
+
+  it('marks the objects an answer highlighted', () => {
+    renderHud({ mode: 'twin', highlightedIds: ['door-1'] })
+    expect(screen.getByRole('button', { name: /Door/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Conference table/ })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('highlights an object picked from the scene list', async () => {
+    const { user, props } = renderHud({ mode: 'twin' })
+    await user.click(screen.getByRole('button', { name: /Conference table/ }))
+    expect(props.onSelectObject).toHaveBeenCalledWith('table-1')
   })
 })

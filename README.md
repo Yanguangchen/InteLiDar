@@ -15,6 +15,7 @@ This repository is a hackathon MVP. Capture and computer vision are designed in;
 | Capability | Status |
 | --- | --- |
 | Browser 3D viewer (raw wireframe → labelled twin) | Working |
+| Progressive sweep-in: geometry arrives with the sensor beam | Working |
 | Demo LiDAR-style ingest (unlabelled boxes + room bounds) | Working |
 | Reconstruct: labels, materials, analysis log | Working |
 | Spatial assistant: ask → reply + 3D highlights | Working |
@@ -78,11 +79,12 @@ Full walkthrough: [docs/getting-started.md](./docs/getting-started.md).
 
 ## Demo
 
-1. Load the viewer. You see a **raw mesh**: wireframe room, unlabelled boxes, a LiDAR-style sweep.
-2. Press **✨ AI Reconstruct**. Classification steps play in the HUD (`Unknown object → Chair × 4`, and so on).
-3. The scene becomes a **semantic twin**: materials, labels, lighting.
-4. Ask *Show me all the chairs.* Matching objects glow in the canvas.
-5. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Doors and windows stay fixed.
+1. Load the viewer. The sensor **sweeps the room**: returns land where the beam points, and each box resolves as the beam reaches it. Press **Skip** to jump to the end.
+2. The sweep leaves a **raw mesh**: wireframe room, unlabelled boxes, a settled point cloud.
+3. Press **✨ AI Reconstruct**. Classification steps play in the HUD (`Unknown object → Chair × 4`, and so on).
+4. The scene becomes a **semantic twin**, materialising object by object: materials, labels, lighting.
+5. Ask *Show me all the chairs.* Matching objects glow in the canvas, and so do their rows in the scene list.
+6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Doors and windows stay fixed.
 
 Suggested questions once reconstructed:
 
