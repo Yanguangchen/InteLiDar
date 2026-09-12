@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { askScene, ingestScene, reconstructScene } from './api/scene'
 import { Hud } from './components/Hud'
 import { moveObject } from './scene/editScene'
+import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
 import type { AnalysisStep, SceneGraph, SceneMode, Vec3 } from './scene/types'
 
@@ -20,6 +21,9 @@ export default function App() {
   const [dragging, setDragging] = useState(false)
 
   const displayGraph = mode === 'twin' && twinGraph ? twinGraph : graph
+  // The sweep only starts once there is geometry for the sensor to find.
+  const { progress: scanProgress, skip: skipScan } = useScanProgress(graph !== null)
+  const scanning = mode === 'raw' && graph !== null && scanProgress < 1
 
   useEffect(() => {
     ingestScene()
@@ -51,12 +55,12 @@ export default function App() {
   }, [mode, analysisSteps])
 
   useEffect(() => {
-    if (mode === 'analysing' || !editing) {
+    if (mode === 'analysing' || scanning || !editing) {
       setDragging(false)
       document.body.style.cursor = 'auto'
     }
-    if (mode === 'analysing') setEditing(false)
-  }, [mode, editing])
+    if (mode === 'analysing' || scanning) setEditing(false)
+  }, [mode, editing, scanning])
 
   function onMoveObject(id: string, position: Vec3) {
     if (mode === 'twin') {
@@ -64,6 +68,12 @@ export default function App() {
       return
     }
     setGraph((current) => (current ? moveObject(current, id, position) : current))
+  }
+
+  function onSelectObject(id: string) {
+    setHighlightedIds((current) =>
+      current.length === 1 && current[0] === id ? [] : [id],
+    )
   }
 
   async function onReconstruct() {
@@ -100,14 +110,11 @@ export default function App() {
 
   return (
     <div className="app">
-      <Canvas
-        shadows
-        camera={{ position: [6.4, 4.2, 6.8], fov: 42 }}
-        gl={{ antialias: true }}
-      >
+      <Canvas shadows="percentage" camera={{ position: [6.4, 4.2, 6.8], fov: 42 }} gl={{ antialias: true }}>
         <ViewerScene
           mode={mode}
           graph={displayGraph}
+          scanProgress={scanProgress}
           highlightedIds={highlightedIds}
           editing={editing}
           dragging={dragging}
@@ -118,10 +125,12 @@ export default function App() {
       <Hud
         mode={mode}
         graph={displayGraph}
+        scanProgress={scanProgress}
         query={query}
         reply={reply}
         error={error}
         editing={editing}
+        highlightedIds={highlightedIds}
         analysisSteps={analysisSteps}
         visibleStepCount={visibleStepCount}
         onToggleEdit={() => setEditing((current) => !current)}
@@ -133,6 +142,8 @@ export default function App() {
         onReconstruct={() => {
           void onReconstruct()
         }}
+        onSkipScan={skipScan}
+        onSelectObject={onSelectObject}
       />
     </div>
   )

@@ -8,15 +8,22 @@ The demonstration is deliberately simple: **raw scan looks unfinished, reconstru
 
 - Backend on 8000, Vite on 5173, browser fullscreen if you can.
 - No OpenAI key required. Heuristics cover the three suggestion chips.
-- Start on a fresh load so the status pill reads **Raw mesh**.
+- Reload just before you present: the opening sweep runs once per load and is the best four seconds of the demo.
+- If you have already shown it, or you are short on time, press **Skip** in the capture card.
 
-## Step 1 — Raw capture
+## Step 1 — The sweep
 
-Show the wireframe room, unlabelled boxes, and the teal sweep. Left panel: *Unlabelled scan*, object rows all `unknown`.
+On load the sensor turns on the spot and the room arrives with it. Returns land where the beam points, boxes resolve one at a time behind it, and the capture card counts returns and volumes found. Nothing is drawn before the beam reaches it.
+
+Talking point: this is a scan, not a download. The geometry exists because something measured it.
+
+## Step 2 — Raw capture
+
+Once the sweep finishes the status pill reads **Raw mesh**: wireframe room, unlabelled boxes, a settled point cloud. Left panel: *Unlabelled scan*, object rows all `unknown`.
 
 Talking point: this is what a cheap LiDAR mesh feels like — structure without meaning.
 
-## Step 2 — Reconstruct
+## Step 3 — Reconstruct
 
 Press **✨ AI Reconstruct**.
 
@@ -35,11 +42,11 @@ Unknown object   →  Shelf
 
 Talking point: InteLiDar is classifying the graph, not hallucinating a new room.
 
-## Step 3 — Semantic twin
+## Step 4 — Semantic twin
 
-Lighting, materials, and labels appear. Status: **Semantic twin**. Object list shows types.
+Materials, lighting and labels arrive object by object rather than all at once, and the point cloud dissolves as they land. Status: **Semantic twin**. The object list shows types and confidence.
 
-## Step 4 — Ask
+## Step 5 — Ask
 
 Use a chip or type:
 
@@ -61,7 +68,9 @@ What objects could obstruct movement through this room?
 
 Talking point: the assistant returns ids; the viewer only paints those ids. The model is not picking pixels.
 
-## Step 5 — Edit (optional but strong)
+Clicking a row in the left panel highlights that object too, if you would rather point than type.
+
+## Step 6 — Edit (optional but strong)
 
 Toggle **Edit**. Drag a chair. Show that the door does not move. Ask chairs again if you want to show highlights following the new pose (twin-graph ask uses current positions in the JSON, even though heuristics do not mention coordinates in the reply).
 
@@ -70,7 +79,9 @@ Toggle **Edit**. Drag a chair. Show that the door does not move. Ask chairs agai
 | Symptom | Fix |
 | --- | --- |
 | Backend unavailable | Start `npm run backend`, reload |
-| Reconstruct does nothing | Wait for ingest (`graph` loaded; button enabled) |
+| No Reconstruct button | The sweep is still running; wait, or press **Skip** |
+| Sweep never starts | Backend is down — the capture card only appears once ingest returns |
+| No sweep at all, room just appears | The machine is set to reduced motion; that path is deliberate |
 | Ask disabled | You are still in raw / analysing |
 | Generic ask reply | Expected without a key, unless the question hits a keyword |
 

@@ -11,9 +11,15 @@ Checked against the live product: ingest → reconstruct → ask → edit/drag.
 | Ask chairs/door/window/equipment/obstacles + id filter | `backend/tests/test_ask.py` | Domain |
 | HTTP ingest/reconstruct/ask, CORS, placeholder key | `backend/tests/test_api.py` | API |
 | Furniture drag rules (floor, clamp, openings fixed) | `src/scene/editScene.test.ts` | Unit |
-| HUD gating (raw/analysing/twin) + edit affordance | `src/components/Hud.test.tsx` | Component |
+| Sweep geometry: bearings, beam aim, reveal windows, easing | `src/scene/scanReveal.test.ts` | Unit |
+| Return-cloud sampling: on-surface, deterministic, windowed | `src/scene/scanCloud.test.ts` | Unit |
+| Sweep clock: timing, skip, reduced motion | `src/scene/useScanProgress.test.ts` | Unit |
+| Canvas animation clock defaults and rate limiting | `src/scene/scanAnim.test.ts` | Unit |
+| Glass specular tracking (`--gx` / `--gy`) | `src/components/useSpecular.test.ts` | Unit |
+| HUD gating (raw/sweeping/analysing/twin), progressive list, row selection | `src/components/Hud.test.tsx` | Component |
 | Frontend API client paths and errors | `src/api/scene.test.ts` | Unit |
-| Demo E2E: reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
+| Demo E2E: sweep → skip → reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
+| Reduced motion skips the sweep end to end | `e2e/demo.spec.ts` | Playwright |
 
 Run everything with `npm test` (Vitest, pytest, Playwright). How to add tests: [docs/development.md](../docs/development.md).
 
@@ -30,4 +36,5 @@ Run everything with `npm test` (Vitest, pytest, Playwright). How to add tests: [
 
 - WebGL pixel-drag of a chair (flaky in headless Chromium). Edit is covered by the toggle, hint, and `editScene` unit tests.
 - Live OpenAI network calls (stubbed / heuristic only).
-- Canvas visual regression.
+- Canvas visual regression. The sweep is covered as geometry (`scanReveal`, `scanCloud`) and as gating (`Hud`, E2E), never as pixels.
+- Shader compilation. `ScanPoints` and `SensorBeacon` are checked by running the app, not by a test.
