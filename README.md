@@ -39,6 +39,7 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
 | [Frontend](./docs/frontend.md) | Viewer, HUD, reconstruct UX, edit mode |
 | [Development](./docs/development.md) | TDD, tests, scripts, seams |
+| [Deploy](./docs/deploy.md) | Vercel, env vars, the same-origin requirement |
 | [Roadmap](./docs/roadmap.md) | MVP must-haves, nice-to-haves, later work |
 | [Test audit](./tests/AUDIT.md) | Coverage map and remaining gaps |
 | [Contributing](./CONTRIBUTING.md) | How to change this repo |

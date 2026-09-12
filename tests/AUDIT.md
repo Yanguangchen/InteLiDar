@@ -20,6 +20,7 @@ Checked against the live product: ingest → reconstruct → ask → edit/drag.
 | Graphics menu: open/close, switches, presets, escape, click-away | `src/components/GraphicsMenu.test.tsx` | Component |
 | HUD gating (raw/sweeping/analysing/twin), progressive list, row selection | `src/components/Hud.test.tsx` | Component |
 | Frontend API client paths and errors | `src/api/scene.test.ts` | Unit |
+| Serverless path rewriting, both host behaviours | `backend/tests/test_asgi.py` | Unit |
 | Demo E2E: sweep → skip → reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
 | Reduced motion skips the sweep end to end | `e2e/demo.spec.ts` | Playwright |
 | Graphics menu drops effects, persists across reload, keeps the demo working | `e2e/demo.spec.ts` | Playwright |
