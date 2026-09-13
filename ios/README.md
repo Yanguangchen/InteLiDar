@@ -2,6 +2,8 @@
 
 Native RoomPlan capture for **LiDAR-equipped iPhones only**, running iOS 16 or later. Safari remains the viewer and editor. There is no camera-only fallback.
 
+The unsigned iPhone app has now been built successfully on a Mac with Xcode 26.6. Device signing, installation, and real scanning are still pending; see [local activation status](./ACTIVATION-STATUS.md).
+
 For a Codex-assisted Mac setup, use the [copy-paste activation handoff](./CODEX-HANDOFF.md).
 
 ## Build and install
@@ -13,7 +15,7 @@ For a Codex-assisted Mac setup, use the [copy-paste activation handoff](./CODEX-
 
 `RoomCaptureSession.isSupported` and the phone device idiom gate scanning before the camera session starts. Unsupported phones and simulators show an explanation with capture disabled. Installing the Safari website on the Home Screen does not install this native app.
 
-This repository contains source, not a signed IPA or TestFlight release. **The native app has not been compiled or tested on an iPhone in the Windows development environment.** Its Swift syntax, Xcode project structure, scheme XML, and permission plist were checked; those checks do not replace an Xcode build and device test.
+This repository contains source, not a signed IPA or TestFlight release. **The native app compiles for iPhone using Xcode 26.6, but has not yet been installed or tested on a physical iPhone.** The successful unsigned build does not replace signing and a real-device capture test.
 
 ## Scan → Files → Safari
 
