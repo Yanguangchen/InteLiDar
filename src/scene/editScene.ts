@@ -44,9 +44,11 @@ export function moveObject(graph: SceneGraph, id: string, next: Vec3): SceneGrap
 function clampToRoom(graph: SceneGraph, object: SceneObject, next: Vec3): Vec3 {
   const halfW = graph.room.width / 2
   const halfD = graph.room.depth / 2
-  const matrix = new Matrix4().makeRotationFromEuler(new Euler(...(object.rotation ?? [0, 0, 0]))).elements
-  const insetX = (Math.abs(matrix[0]) * object.size[0] + Math.abs(matrix[4]) * object.size[1] + Math.abs(matrix[8]) * object.size[2]) / 2
-  const insetZ = (Math.abs(matrix[2]) * object.size[0] + Math.abs(matrix[6]) * object.size[1] + Math.abs(matrix[10]) * object.size[2]) / 2
+  const rotation = new Matrix4().makeRotationFromEuler(new Euler(...(object.rotation ?? [0, 0, 0])))
+  const e = rotation.elements
+  const [x, y, z] = object.size.map((dimension) => dimension / 2)
+  const insetX = Math.abs(e[0]) * x + Math.abs(e[4]) * y + Math.abs(e[8]) * z
+  const insetZ = Math.abs(e[2]) * x + Math.abs(e[6]) * y + Math.abs(e[10]) * z
   return [
     clamp(next[0], -halfW + insetX, halfW - insetX),
     object.position[1],
