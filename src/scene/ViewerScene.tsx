@@ -1,4 +1,4 @@
-import { Html, OrbitControls } from '@react-three/drei'
+import { Edges, Html, OrbitControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -12,6 +12,7 @@ import {
   type Group,
   type LineBasicMaterial,
   type Mesh,
+  type PointLight,
 } from 'three'
 import { canDragObject } from './editScene'
 import { preloadCatalogModels } from './catalogModel'
@@ -34,6 +35,9 @@ import {
 } from './scanReveal'
 import type { GraphicsSettings } from '../settings/graphics'
 import type { SceneGraph, SceneMode, SceneObject, SceneRoom, Vec3 } from './types'
+import { interactionsForGraph } from '../interaction/profiles'
+import { applyObjectPower, nearestEnabledLamps } from './furnitureEffects'
+import { furnitureAssetsReady, furnitureLoadKey } from './furnitureReadiness'
 
 const FALLBACK_ROOM: SceneRoom = {
   id: 'room-1',
@@ -45,6 +49,7 @@ const FALLBACK_ROOM: SceneRoom = {
 }
 
 const ACCENT = '#3ee0c2'
+const EMPTY_TOGGLES: Readonly<Record<string, boolean>> = {}
 /** Objects with no scan window of their own are simply there. */
 const WHOLE_WINDOW: RevealWindow = { start: 0, end: 0.0001 }
 
@@ -58,6 +63,8 @@ type ViewerSceneProps = {
   scanProgress: number
   settings: GraphicsSettings
   highlightedIds: string[]
+  interactionTargetId?: string | null
+  toggles?: Readonly<Record<string, boolean>>
   editing: boolean
   dragging: boolean
   onDraggingChange: (dragging: boolean) => void
@@ -73,6 +80,8 @@ export function ViewerScene({
   scanProgress,
   settings,
   highlightedIds,
+  interactionTargetId = null,
+  toggles = EMPTY_TOGGLES,
   editing,
   dragging,
   onDraggingChange,
@@ -110,9 +119,7 @@ export function ViewerScene({
   const onAssetReady = useCallback((key: string, ready: boolean) => {
     setLoadedAssets((previous) => previous[key] === ready ? previous : { ...previous, [key]: ready })
   }, [])
-  const assetsReady = objects.every((object) =>
-    !reconstructed || !usesDemoFurniture(object) || loadedAssets[`${object.id}:${object.type}`],
-  )
+  const assetsReady = furnitureAssetsReady(objects, reconstructed, loadedAssets)
   useEffect(() => { onAssetsReady?.(assetsReady) }, [assetsReady, onAssetsReady])
 
   const palette = useMemo(
@@ -180,6 +187,7 @@ export function ViewerScene({
         shadow-camera-far={shadowReach * 4 + 12}
       />
       {reconstructed && <directionalLight position={[-5, 4, -4.5]} intensity={0.45} color="#cfe0ff" />}
+      {reconstructed && graph && <InteractiveLampLights graph={graph} toggles={toggles} />}
       {reconstructed && (
         <>
           {lamps.map((lamp, index) => (
@@ -227,6 +235,8 @@ export function ViewerScene({
             settings={sceneSettings}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
+            targeted={gameplayActive && interactionTargetId === object.id}
+            powered={Boolean(toggles[object.id])}
             labelled={!gameplayActive && showsLabel({ total: objects.length, highlighted: highlightedIds.includes(object.id) })}
             editing={editing && !gameplayActive}
             gameplayActive={gameplayActive}
@@ -242,6 +252,22 @@ export function ViewerScene({
       </group>
     </>
   )
+}
+
+/** Keep four GPU light slots stable; moving the camera never schedules a React render. */
+function InteractiveLampLights({ graph, toggles }: { graph: SceneGraph; toggles: Readonly<Record<string, boolean>> }) {
+  const definitions = useMemo(() => interactionsForGraph(graph), [graph])
+  const lights = useRef<(PointLight | null)[]>([])
+  useFrame(({ camera }) => {
+    const nearest = nearestEnabledLamps(definitions, toggles, camera.position.toArray())
+    lights.current.forEach((light, index) => {
+      if (!light) return
+      const lamp = nearest[index]
+      light.intensity = lamp ? 3.5 : 0
+      if (lamp) light.position.set(...(lamp.lightPosition ?? lamp.point))
+    })
+  })
+  return <>{[0, 1, 2, 3].map((index) => <pointLight key={index} ref={(light) => { lights.current[index] = light }} color="#ffd7a2" intensity={0} distance={4.5} decay={2} castShadow={false} />)}</>
 }
 
 function RoomCloud({ room, origin, anim }: { room: SceneRoom; origin: Vec3; anim: ScanAnim }) {
@@ -442,6 +468,8 @@ function SceneMesh({
   settings,
   reconstructed,
   highlighted,
+  targeted,
+  powered,
   labelled,
   editing,
   gameplayActive,
@@ -458,6 +486,8 @@ function SceneMesh({
   settings: GraphicsSettings
   reconstructed: boolean
   highlighted: boolean
+  targeted: boolean
+  powered: boolean
   /** Carries a floating name plate; a crowded scene names only the answer. */
   labelled: boolean
   editing: boolean
@@ -479,7 +509,9 @@ function SceneMesh({
   const draggable = editing && canDragObject(object)
   const { instance, ready } = useFurniture(reconstructed && usesDemoFurniture(object) ? object.type : '')
   const fitted = useMemo(() => instance ? fitFurniture(instance.bounds, object.size) : null, [instance, object.size])
-  useEffect(() => { onAssetReady(`${object.id}:${object.type}`, ready) }, [object.id, object.type, ready, onAssetReady])
+  const assetKey = furnitureLoadKey(object)
+  const onCatalogReady = useCallback((value: boolean) => onAssetReady(assetKey, value), [assetKey, onAssetReady])
+  useEffect(() => { if (!object.assetId) onAssetReady(assetKey, ready) }, [object.assetId, assetKey, ready, onAssetReady])
 
   useEffect(() => {
     if (!instance) return
@@ -587,7 +619,10 @@ function SceneMesh({
     if (rawMesh.current) rawMesh.current.visible = rawMaterial.opacity > 0.004
 
     const glow = highlighted ? 0.45 + Math.sin(anim.time * 4.2) * 0.18 : draggable ? 0.12 : 0
-    if (instance) updateFurnitureMaterials(instance.materials, solid, glow * solid)
+    if (instance) {
+      updateFurnitureMaterials(instance.materials, solid, glow * solid)
+      applyObjectPower(instance.materials.flatMap(({ material }) => material instanceof MeshStandardMaterial ? [material] : []), object, powered, solid)
+    }
     if (twinMesh.current) {
       twinMesh.current.visible = solid > 0.004
       // The last centimetre of the lift into place.
@@ -598,7 +633,12 @@ function SceneMesh({
   const labelDelay = settings.motion ? (materialise.start * TWIN_DURATION_MS) / 1000 : 0
 
   return (
-    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]} name={`scene-object:${object.id}`} userData={{ semanticObjectId: object.id }}>
+    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]} name={`scene-object:${object.id}`} userData={{ semanticObjectId: object.id, powered, interactionTarget: targeted }}>
+      {targeted && <mesh raycast={() => {}}>
+        <boxGeometry args={object.size.map((value) => value + 0.035) as Vec3} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        <Edges color="#78d7ff" raycast={() => {}} />
+      </mesh>}
       <group ref={shell}>
         <mesh ref={rawMesh} material={rawMaterial}>
           <boxGeometry args={object.size} />
@@ -628,7 +668,7 @@ function SceneMesh({
             <group position={fitted.position} scale={fitted.scale} dispose={null}>
               <primitive object={instance.scene} dispose={null} />
             </group>
-          ) : reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} labelled={labelled} />}
+          ) : reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} powered={powered} onReady={onCatalogReady} labelled={labelled} />}
         </group>
         {cloud && <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />}
       </group>

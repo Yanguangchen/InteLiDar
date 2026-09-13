@@ -615,7 +615,7 @@
       "description": "Neutral casual humanoid, sage short-sleeved shirt, charcoal trousers and simple sneakers.",
       "triangles": 4860,
       "vertices": 2516,
-      "bytes": 291840,
+      "bytes": 336720,
       "dimensions_m": {
         "width": 0.75438,
         "height": 1.77903,
@@ -626,7 +626,10 @@
       "animations": [
         "idle",
         "walk",
-        "run"
+        "run",
+        "sit_down",
+        "seated_idle",
+        "stand_up"
       ],
       "materials": [
         "IDAR_dark",

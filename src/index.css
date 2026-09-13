@@ -1201,20 +1201,63 @@ button.chip:disabled { cursor: default; opacity: 0.45; }
 .room-setup .spawn-feedback { min-height: 44px; color: #ffd7a0; }
 .room-setup .spawn-feedback.valid { color: #9cead5; }
 .room-setup .session-note { margin: 18px 0 0; font-size: 12px; }
-.room-orbit-help, .play-help {
+.room-orbit-help, .play-bottom {
   position: absolute;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
+}
+.room-orbit-help, .play-help {
   padding: 14px 22px;
   border-radius: var(--r-md);
   font-size: 13px;
   white-space: nowrap;
   color: #c9d8dc;
 }
-.play-help { display: flex; gap: 25px; align-items: center; }
+.play-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+}
+.hud .play-bottom { pointer-events: none; }
+.play-help { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 25px; align-items: center; max-width: 100%; }
 .play-help .control-label { margin-left: 5px; color: #b5c6cd; }
 .play-help kbd { font: inherit; color: #eef6f6; }
+.play-interaction { max-width: min(360px, 100%); padding: 6px; border-radius: var(--r-md); text-align: center; }
+.interaction-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 18px 6px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.interaction-action:hover:not(:disabled) { background: var(--accent-soft); }
+.interaction-action:disabled { color: #b5c6cd; cursor: default; }
+.interaction-action kbd {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #3ee0c266;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  font-weight: 550;
+}
+.interaction-action:disabled kbd { color: #b5c6cd; border-color: var(--glass-line); background: transparent; }
+.play-interaction p { margin: 0; padding: 2px 14px 10px; color: #ffd7a0; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .play-status {
   position: absolute;
   top: 50%;

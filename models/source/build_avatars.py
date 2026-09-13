@@ -1,7 +1,7 @@
 """Reusable procedural humanoids for the InteliDar asset library.
 
 Run inside Blender. ``build_avatar(name, variant, collection, palette)`` creates
-one skinned mesh, one armature and three looping actions, without deleting any
+one skinned mesh, one armature and locomotion actions, without deleting any
 existing scene data. Coordinates are metres, Z up, front -Y. Export the returned
 objects together using glTF ``export_animation_mode='NLA_TRACKS'``. All NLA tracks
 remain unmuted for export; their strips occupy consecutive timeline ranges, and
@@ -12,6 +12,10 @@ import math
 import bpy
 import bmesh
 from mathutils import Quaternion, Vector
+
+
+SEATED_SURFACE_HEIGHT = .46
+SEATING_TRANSITION_FRAMES = 20
 
 
 def _material(name, rgb, roughness=0.75):
@@ -311,6 +315,86 @@ def _ground_walk(armature, mesh_obj):
     return {'frames': len(corrections), 'largest_correction_m': max(map(abs, corrections), default=0.0)}
 
 
+def _animate_seating(armature, scale):
+    """Seat the adult rig without scaling it or introducing horizontal root motion.
+
+    The pelvis underside rests at .46 m. The slightly descending thighs keep
+    the original ankle height and flat soles. Other furniture profiles may
+    translate the visual root vertically by seat_surface_height - .46 m.
+    NLA ranges are disjoint from locomotion and each export starts at zero.
+    """
+    scene = bpy.context.scene
+    animation = armature.animation_data_create()
+    lowering = SEATED_SURFACE_HEIGHT - .855 * scale
+    hips_height = .95 * scale + lowering
+    # Keep ankle/sole height unchanged while hips move onto the cushion.
+    knee_drop = hips_height - .52 * scale
+    thigh_angle = -math.acos(knee_drop / (.43 * scale))
+    seated_ankle_forward = -.43 * scale * math.sin(thigh_angle)
+    armature['seated_surface_height_m'] = SEATED_SURFACE_HEIGHT
+    armature['seated_hips_height_m'] = hips_height
+    armature['seated_hips_lowering_m'] = lowering
+    armature['seating_transition_seconds'] = SEATING_TRANSITION_FRAMES / 30
+    armature['rig_notes'] = '21 bones; hips root; in-place idle/walk/run and sit_down/seated_idle/stand_up'
+    clips = [('sit_down', 241, SEATING_TRANSITION_FRAMES), ('seated_idle', 301, 90),
+             ('stand_up', 421, SEATING_TRANSITION_FRAMES)]
+    for clip, start, duration in clips:
+        action = bpy.data.actions.new(armature.name + '_' + clip)
+        action.use_fake_user = True
+        animation.action = action
+        for frame in range(start, start + duration + 1):
+            t = (frame - start) / duration
+            amount = t * t * (3 - 2 * t)
+            if clip == 'stand_up':
+                amount = 1 - amount
+            if clip == 'seated_idle':
+                amount = 1
+            breath = math.sin(t * math.tau) if clip == 'seated_idle' else 0
+            for bone in armature.pose.bones:
+                bone.rotation_mode = 'QUATERNION'
+                bone.rotation_quaternion = (1, 0, 0, 0)
+                bone.location = (0, 0, 0)
+            root = armature.pose.bones['hips']
+            root.location = root.bone.matrix_local.to_quaternion().inverted() @ Vector((0, 0, lowering * amount))
+            lean = .14 * math.sin(math.pi * amount) + .035 * amount + .006 * breath
+            _rotate(armature.pose.bones['chest'], lean)
+            _rotate(armature.pose.bones['head'], -.8 * lean)
+            # Bake a two-link leg solve. Interpolating FK alone makes shoes dip
+            # through the floor halfway through a sit; these fixed-height ankle
+            # targets preserve floor contact while the pelvis lowers.
+            thigh_length, shin_length = .43 * scale, .39 * scale
+            ankle_forward = seated_ankle_forward * amount
+            hip_to_ankle = .82 * scale + lowering * amount
+            reach = math.hypot(ankle_forward, hip_to_ankle)
+            bend = math.acos(max(-1, min(1, (thigh_length ** 2 + reach ** 2 - shin_length ** 2) / (2 * thigh_length * reach))))
+            upper_angle = -math.atan2(ankle_forward, hip_to_ankle) - bend
+            knee_forward = -thigh_length * math.sin(upper_angle)
+            knee_above_ankle = hip_to_ankle - thigh_length * math.cos(upper_angle)
+            lower_angle = math.atan2(knee_forward - ankle_forward, knee_above_ankle)
+            for suffix, sign in (('L', 1), ('R', -1)):
+                _rotate(armature.pose.bones['thigh.' + suffix], upper_angle)
+                _rotate(armature.pose.bones['shin.' + suffix], lower_angle - upper_angle)
+                _rotate(armature.pose.bones['foot.' + suffix], -lower_angle)
+                upper = armature.pose.bones['upper_arm.' + suffix]
+                _rotate(upper, -.28 * amount)
+                inward_axis = upper.bone.matrix_local.to_quaternion().inverted() @ Vector((0, 1, 0))
+                upper.rotation_quaternion = Quaternion(inward_axis, sign * .30 * amount) @ upper.rotation_quaternion
+                _rotate(armature.pose.bones['forearm.' + suffix], -.075 - .275 * amount)
+            for bone in armature.pose.bones:
+                bone.keyframe_insert(data_path='rotation_quaternion', frame=frame, group=bone.name)
+            root.keyframe_insert(data_path='location', frame=frame, group='hips')
+        track = animation.nla_tracks.new()
+        track.name = clip
+        strip = track.strips.new(clip, start, action)
+        strip.extrapolation = 'NOTHING'
+        strip.blend_type = 'REPLACE'
+        if hasattr(action, 'slots') and action.slots and hasattr(strip, 'action_slot'):
+            strip.action_slot = action.slots[0]
+        animation.action = None
+    scene.frame_set(1)
+    return [name for name, _, _ in clips]
+
+
 def build_avatar(name, variant, collection, palette):
     if variant not in ('casual', 'sporty', 'stylized'):
         raise ValueError('variant must be casual, sporty or stylized')
@@ -416,6 +500,8 @@ def build_avatar(name, variant, collection, palette):
     mesh_obj['uv_notes'] = 'UVMap on all surfaces; solid-color materials need no textures'
     animations = _animate(armature, scale)
     _ground_walk(armature, mesh_obj)
+    if variant == 'casual':
+        animations += _animate_seating(armature, scale)
     bpy.context.view_layer.update()
     return {
         'root': armature,

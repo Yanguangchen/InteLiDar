@@ -2,7 +2,7 @@
 
 30 original, lightweight Blender assets for LiDAR room environments and Three.js. All 30 GLBs are self-contained: no textures, external buffers, branding, or decoder dependencies.
 
-- **GLB total:** 34,960 triangles; 2,350,060 bytes (2.24 MiB).
+- **GLB total:** 34,960 triangles; approximately 2.28 MiB. Exact byte counts are in the validation reports.
 - **Source:** [intelidar_asset_library.blend](intelidar_asset_library.blend), with all asset collections marked for the Blender Asset Browser and a separate display gallery.
 - **Scale:** metres, 1 unit = 1 metre. Exports use +Y up and +Z forward; source uses +Z up and -Y forward.
 - **Origins:** floor/support-surface centre, except the door at its bottom-left hinge. Electronics are placed at their support surface, so a monitor's position.y should equal desktop height.
@@ -43,13 +43,17 @@ Dimensions are **width × depth × height** in metres. Triangle counts are exact
 | [bookshelf](furniture/bookshelf.glb) | 908 | 0.800 × 0.380 × 1.800 | 70.9 |
 | [door_simple](furniture/door_simple.glb) | 396 | 0.901 × 0.112 × 2.040 | 21.5 |
 | [rug_simple](furniture/rug_simple.glb) | 132 | 1.600 × 2.200 × 0.009 | 11.2 |
-| [avatar_casual](avatars/avatar_casual.glb) | 4,860 | 0.754 × 0.334 × 1.779 | 285.0 |
+| [avatar_casual](avatars/avatar_casual.glb) | 4,860 | 0.754 × 0.334 × 1.779 | 328.8 |
 | [avatar_sporty](avatars/avatar_sporty.glb) | 4,936 | 0.762 × 0.337 × 1.778 | 286.5 |
 | [avatar_stylized](avatars/avatar_stylized.glb) | 4,460 | 0.716 × 0.317 × 1.689 | 263.6 |
 
 ## Avatars and animation
 
 All three avatars (`avatar_casual`, `avatar_sporty`, `avatar_stylized`) are rigged and include looping, in-place `idle` (3 seconds), `walk` (1.2 seconds), and `run` (0.8 seconds) clips at 30 fps. These are simple procedural FK loops; the game controller supplies movement. The walk cycle includes baked floor-contact corrections.
+
+`avatar_casual` additionally includes one-shot `sit_down` and `stand_up` clips (20 frames / 30 fps, approximately 0.667 seconds) and looping `seated_idle` (3 seconds). The object root stays at the floor with no horizontal root motion. At the reference seat surface of **0.46 m**, the seated hips joint is **0.55405 m** high; its vertical displacement from standing is **−0.38645 m**. Knees face +Z and the flat soles remain on the floor. Place the visual root at `seatSurfaceY - 0.46` for other seat heights; keep the standing avatar's scale unchanged. Custom root metadata records these values for validation. The casual NLA tracks use frames 241–261, 301–391, and 421–441 for these three actions.
+
+The sit/stand transitions bake a two-link leg solve so shoes stay on the floor while the hips move. Gameplay additionally uses `createSeatPose` from `src/player/seatPose.ts` after the mixer step to calibrate cushion heights from **0.36–0.64 m above the floor**. It preserves the animated forward foot positions, adjusts knee flexion, and keeps both soles flat without scaling the avatar or altering the upper body. Construct it on the unposed clone; pass the same seating weight used to blend the visual root height.
 
 The common 21-bone hierarchy contains hips, spine, chest, neck, head, paired shoulders, upper arms, forearms, hands, thighs, shins, feet, and toes. `.L`/`.R` denote sides. This is a generic named humanoid rig, not a VRM avatar or a Mixamo-specific retargeting profile. Rest pose is relaxed arms-down; import both skin and armature together.
 
@@ -84,7 +88,7 @@ The GLBs include no collision shapes or gameplay scripts. Derive collision primi
 
 - All 30 GLBs passed binary checks for embedded buffers, indices, finite positions/normals/UVs, PBR materials, origins, skinning, and animations.
 - All 30 were imported individually into temporary clean Blender scenes; triangle counts, materials, dimensions, normals, UVs, and armatures were verified with no warnings. Blender's generated bone-display helpers are excluded from geometry counts.
-- The repo's actual Three.js r186 `GLTFLoader` loaded all 30; all nine avatar clips were sampled and checked for finite bone matrices and posed bounds. This is loader/animation validation, not a WebGL pixel regression test.
+- The repo's actual Three.js r186 `GLTFLoader` loaded all 30; all twelve avatar clips were sampled and checked for finite bone matrices and posed bounds. This is loader/animation validation, not a WebGL pixel regression test.
 - Blender-rendered previews were visually reviewed for all assets, plus idle/walk/run poses.
 
 Reports: [validation.json](validation.json), [validation_three.json](validation_three.json), [manifest.json](manifest.json).
@@ -104,3 +108,10 @@ node models/source/validate_three.mjs
 ```
 
 Running the standalone binary validator overwrites `validation.json` without Blender roundtrip sections. To generate the full report, run its `--blender-roundtrip` option inside Blender. Asset creation uses no third-party meshes, images, fonts baked into GLBs, or external material assets.
+
+To rebuild only the casual gameplay avatar, including its sitting actions, run the targeted generator below. It preserves other GLBs and the existing library `.blend`; that gallery snapshot predates the sitting actions, while `build_avatars.py` is the current reproducible source. The optional preview renders the seated pose at the reference seat height into ignored test output.
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' --background --factory-startup --python models/source/export_casual_avatar.py -- --preview test-results/avatar-seated.png
+node --test scripts/avatarAnimations.test.mjs
+```

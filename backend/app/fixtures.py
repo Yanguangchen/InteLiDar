@@ -83,6 +83,7 @@ DEMO_OBJECTS: list[SceneObject] = [
         category="equipment",
         position=(0, 0.999, -0.28),
         size=(0.58, 0.478, 0.2),
+        rotation=(0, math.pi, 0),
         material="plastic",
         color="#1c222c",
         confidence=0.9,

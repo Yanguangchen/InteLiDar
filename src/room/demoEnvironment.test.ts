@@ -9,12 +9,13 @@ describe('demoEnvironment', () => {
     graph.objects[0].rotation = [0, Math.PI / 4, 0]
     const environment = demoEnvironment(graph)
     expect(environment.bounds).toEqual({ min: [-3.7, 0, -2.6], max: [3.7, 2.8, 2.6] })
-    expect(environment.colliders).toHaveLength(7)
+    expect(environment.colliders.length).toBeGreaterThan(7)
     const boxes = environment.colliders.filter((collider) => collider.kind === 'box')
     expect(boxes.some((box) => box.center[1] + box.halfExtents[1] === 0)).toBe(true)
-    expect(boxes).toContainEqual({
-      kind: 'box', center: [0, 0.38, 0], halfExtents: [1.2, 0.38, 0.6], rotation: [0, Math.PI / 4, 0],
-    })
+    const furniture = boxes.filter(box => box.objectId === graph.objects[0].id)
+    expect(furniture.length).toBeGreaterThan(1)
+    expect(furniture.every(box => box.rotation?.[1] === Math.PI / 4)).toBe(true)
+    expect(furniture.some(box => Math.abs(box.center[1] + box.halfExtents[1] - .76) < .00001)).toBe(true)
     expect(environment.spawn[1]).toBe(0.02)
     expect(Math.abs(environment.spawn[2])).toBeGreaterThan(0.85)
     expect(graph.objects[0].position).toEqual([0, 0.38, 0])

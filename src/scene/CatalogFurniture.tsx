@@ -6,6 +6,7 @@ import { instantiateCatalogModel, loadCatalogModel } from './catalogModel'
 import { furnitureAsset, type FurnitureAsset } from './furnitureCatalog'
 import type { FurnitureModelProps } from './FurnitureModel'
 import { revealAmount } from './scanReveal'
+import { applyObjectPower } from './furnitureEffects'
 
 function useCatalogSource(assetId: string) {
   const [result, setResult] = useState<{ id: string; scene?: Group; error?: boolean } | null>(null)
@@ -24,6 +25,8 @@ function useCatalogSource(assetId: string) {
 export function CatalogFurniture(props: FurnitureModelProps) {
   const assetId = props.object.assetId!
   const { result, retry } = useCatalogSource(assetId)
+  const onReady = props.onReady
+  useEffect(() => { onReady?.(Boolean(result?.scene)) }, [onReady, result])
   if (result?.scene) return <PlacedModel {...props} source={result.scene} />
   // A failure is always worth saying, since it costs the user an object and offers a
   // retry. A pending load is not: on a crowded floor that is a hundred chips of noise
@@ -38,7 +41,7 @@ export function CatalogFurniture(props: FurnitureModelProps) {
   )
 }
 
-function PlacedModel({ source, object, anim, materialise, highlighted, draggable }: FurnitureModelProps & { source: Group }) {
+function PlacedModel({ source, object, anim, materialise, highlighted, draggable, powered = false }: FurnitureModelProps & { source: Group }) {
   const [w, h, d] = object.size
   const model = useMemo(() => instantiateCatalogModel(source, [w, h, d]), [source, w, h, d])
   useEffect(() => () => model.dispose(), [model])
@@ -64,6 +67,7 @@ function PlacedModel({ source, object, anim, materialise, highlighted, draggable
         material.emissiveIntensity = material.userData.emission
       }
     }
+    applyObjectPower(model.materials, object, powered, solid)
   })
   return <primitive object={model.root} dispose={null} />
 }

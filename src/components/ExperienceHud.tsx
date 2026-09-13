@@ -33,9 +33,12 @@ function ExperienceBar({ name, children }: { name: string; children: ReactNode }
   </header>
 }
 
-export function PlayHud({ ready, paused, name, onExit, onReset, onResume, settings, onSettingsChange }: GraphicsProps & {
-  ready: boolean; paused: boolean; name: string; onExit: () => void; onReset: () => void; onResume: () => void
+export function PlayHud({ ready, paused, name, onExit, onReset, onResume, settings, onSettingsChange,
+  interaction, onInteract }: GraphicsProps & {
+  ready: boolean; paused: boolean; name: string; onExit: () => void; onReset: () => void; onResume: () => void;
+  interaction?: { label: string; available: boolean; reason?: string } | null; onInteract?: () => void
 }) {
+  const reasonId = useId()
   return <div className="hud experience-hud">
     <ExperienceBar name={name}>
       <button className="chip" type="button" disabled={!ready} onClick={onReset}>Reset position</button>
@@ -47,11 +50,22 @@ export function PlayHud({ ready, paused, name, onExit, onReset, onResume, settin
       <p>{!ready ? 'Loading the avatar and checking a clear starting position.' : 'Your room is ready when you are.'}</p>
       {ready && <button className="chip play-button" type="button" onClick={onResume}>Resume</button>}
     </div>}
-    <div className="play-help glass" aria-label="Desktop controls">
-      <span><kbd>WASD</kbd> / arrows <span className="control-label">Move</span></span>
-      <span><kbd>Shift</kbd> <span className="control-label">Run</span></span>
-      <span>Mouse drag <span className="control-label">Look</span></span>
-      <span><kbd>Esc</kbd> <span className="control-label">Exit</span></span>
+    <div className="play-bottom">
+      {ready && !paused && interaction && <div className="play-interaction glass">
+        <button type="button" className="interaction-action" onClick={onInteract}
+          disabled={!interaction.available || !onInteract} aria-keyshortcuts="E"
+          aria-describedby={interaction.reason ? reasonId : undefined}>
+          <kbd aria-hidden="true">E</kbd><span>{interaction.label}</span>
+        </button>
+        {interaction.reason && <p id={reasonId} role="status">{interaction.reason}</p>}
+      </div>}
+      <div className="play-help glass" aria-label="Desktop controls">
+        <span><kbd>WASD</kbd> / arrows <span className="control-label">Move</span></span>
+        <span><kbd>Shift</kbd> <span className="control-label">Run</span></span>
+        <span>Mouse drag <span className="control-label">Look</span></span>
+        <span><kbd>E</kbd> <span className="control-label">Interact</span></span>
+        <span><kbd>Esc</kbd> <span className="control-label">Exit</span></span>
+      </div>
     </div>
   </div>
 }

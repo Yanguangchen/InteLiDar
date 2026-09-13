@@ -3,6 +3,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { shapeFor } from './appearance'
 import { makeSurface, surfaceTexture } from './modelMaterials'
 import type { SceneObject, Vec3 } from './types'
+import { PROCEDURAL_CHAIR_SEAT, STANDARD_CHAIR_SEAT, PROCEDURAL_SOFA, proceduralSofaSeats } from '../interaction/profiles'
+import { usesDemoFurniture } from '../assets/catalog'
 
 /** Models use a unit bounding volume, so every style retains the measured footprint. */
 export function buildFurnitureModel(object: SceneObject) {
@@ -64,8 +66,9 @@ export function buildFurnitureModel(object: SceneObject) {
     box([0.15, 0.004, 0.07], [0, 0.496, -0.18], frame, 0.003)
     box([0.12, 0.003, 0.004], [0, 0.499, -0.18], dark, 0)
   } else if (object.type === 'chair') {
+    const contact = usesDemoFurniture(object) ? STANDARD_CHAIR_SEAT : PROCEDURAL_CHAIR_SEAT
     box([0.89, 0.09, 0.8], [0, -0.05, 0.035], frame, 0.025)
-    box([0.92, 0.12, 0.83], [0, 0.025, 0.03], primary, 0.04)
+    box([0.92, 0.12, 0.83], [0, contact[1] - 0.06, contact[2]], primary, 0.04)
     box([0.86, 0.46, 0.14], [0, 0.27, -0.40], primary, shape === 'visitor' ? 0.018 : 0.045)
     // Upholstery seams and lumbar pad, kept in the same color family.
     const seam = surface(primary.color.clone().multiplyScalar(0.7).getStyle(), object.material ?? 'fabric')
@@ -87,6 +90,29 @@ export function buildFurnitureModel(object: SceneObject) {
     } else for (const x of [-0.35, 0.35]) for (const z of [-0.3, 0.34]) {
       box([0.055, 0.41, 0.055], [x, -0.295, z], shape === 'armchair' ? timber : chrome)
     }
+  } else if (object.type === 'sofa') {
+    const cushions = proceduralSofaSeats(object.size[0])
+    const profile = PROCEDURAL_SOFA
+    box([0.94, 0.20, 0.9], [0, -0.235, 0], primary, 0.035)
+    box([0.90, 0.62, 0.16], [0, 0.19, -0.42], primary, 0.045)
+    for (const x of [-0.45, 0.45]) box([0.1, 0.46, 1], [x, -0.005, 0], primary, 0.035)
+    for (const x of [-0.40, 0.40]) for (const z of [-0.37, 0.37]) box([0.055, 0.165, 0.07], [x, -0.4175, z], timber)
+    const cushion = surface(object.color ?? '#839b95', object.material ?? 'fabric')
+    for (const [x] of cushions) {
+      box([profile.innerWidth / cushions.length - 0.008, profile.cushionHeight, profile.cushionDepth],
+        [x, profile.seatTop - profile.cushionHeight / 2, profile.seatCenterZ], cushion, 0.035)
+      box([profile.innerWidth / cushions.length - 0.008, 0.40, 0.16], [x, 0.245, -0.26], cushion, 0.035)
+    }
+  } else if (object.type === 'lamp') {
+    cylinder(0.40, 0.025, [0, -0.4875, 0], dark)
+    cylinder(0.031, 0.89, [0, -0.03, 0], chrome)
+    const shade = surface(object.color ?? '#e7dcc6', object.material ?? 'fabric')
+    shade.userData.powerSurface = 'lamp'
+    const bulb = surface('#fff0d4', 'plastic')
+    bulb.userData.powerSurface = 'lamp'
+    bulb.userData.bulb = true
+    part(new CylinderGeometry(0.31, 0.5, 0.194, 24, 1, true), [0, 0.403, 0], shade)
+    part(new SphereGeometry(0.071, 16, 12), [0, 0.375, 0], bulb, [1, 0.55, 1])
   } else if (object.type === 'shelf') {
     for (const x of [-0.48, 0.48]) box([0.04, 1, 1], [x, 0, 0])
     box([0.92, 0.95, 0.035], [0, 0, -0.4825])
@@ -114,12 +140,11 @@ export function buildFurnitureModel(object: SceneObject) {
     const h = shape === 'wide' ? 0.61 : 0.77
     box([1, h, 0.50], [0, 0.5 - h / 2, -0.12], primary, 0.024)
     const screen = surface('#183342', 'plastic')
-    screen.emissive.set('#214454')
-    screen.emissiveIntensity = 0.35
-    screen.userData.emission = 0.35
+    screen.userData.powerSurface = 'screen'
     box([0.94, h - 0.075, 0.02], [0, 0.5 - h / 2 + 0.006, 0.14], screen, 0.005)
     // A subtle dashboard gives the screen depth without external assets.
     const pixel = surface('#67afa9', 'plastic')
+    pixel.userData.powerSurface = 'screen'
     for (let i = 0; i < 7; i++) box([0.035, 0.06 + i % 3 * 0.035, 0.008], [-0.32 + i * 0.075, 0.10, 0.156], pixel, 0.002)
     box([0.11, 0.36, 0.32], [0, -0.3, -0.08], chrome)
     box([0.44, 0.055, 1], [0, -0.4725, 0], frame)
