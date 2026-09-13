@@ -1381,6 +1381,8 @@ input { caret-color: var(--accent); }
   overflow: auto;
 }
 .capture-import::backdrop { background: #02060bd9; backdrop-filter: blur(8px); }
+.agent-briefing h3 { margin-top: 24px; }
+.agent-briefing a { color: var(--accent); text-decoration: underline; }
 .capture-import-heading { display: flex; justify-content: space-between; align-items: center; }
 .capture-import-heading button { color: var(--text); background: transparent; border: 0; font-size: 26px; cursor: pointer; min-width: 44px; min-height: 44px; }
 .capture-import h2 { font-size: 24px; margin: 8px 0 16px; }

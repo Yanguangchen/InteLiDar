@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expectdo, test } from '@playwright/test'
 import { roomPlanCapture } from '../src/test/roomPlanCapture'
 
 test.use({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })

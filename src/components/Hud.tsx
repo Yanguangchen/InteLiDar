@@ -7,6 +7,7 @@ import { CaptureImport } from './CaptureImport'
 import { ExportPanel } from './ExportPanel'
 import { useSpecular } from './useSpecular'
 import { ReadAloud } from './ReadAloud'
+import { AgentBriefing } from './AgentBriefing'
 
 type HudProps = {
   experienceActions?: ReactNode
@@ -108,6 +109,7 @@ export function Hud({
           </div>
         </div>
         <div className="topbar-actions">
+          <AgentBriefing />
           {experienceActions}
           {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
           <ExportPanel graph={graph} disabled={mode === 'analysing'} />

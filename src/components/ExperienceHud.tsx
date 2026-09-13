@@ -1,5 +1,6 @@
 import { useId, useRef, type ReactNode } from 'react'
 import { GraphicsMenu } from './GraphicsMenu'
+import { AgentBriefing } from './AgentBriefing'
 import type { GraphicsSettings } from '../settings/graphics'
 import type { Vec3 } from '../scene/types'
 
@@ -29,7 +30,7 @@ function ExperienceBar({ name, children }: { name: string; children: ReactNode }
     <div className="brand"><span className="mark" aria-hidden="true" /><div>
       <p className="name">InteLiDar</p><p className="tag room-name">{name}</p>
     </div></div>
-    <div className="topbar-actions">{children}</div>
+    <div className="topbar-actions"><AgentBriefing />{children}</div>
   </header>
 }
 
