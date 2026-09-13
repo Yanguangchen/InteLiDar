@@ -17,10 +17,19 @@ That is the whole command. [vercel.json](../vercel.json) supplies the rest:
 | `buildCommand` / `outputDirectory` | `npm run build` → `dist/`, served statically |
 | `functions["api/index.py"]` | The API as one Python serverless function |
 | `includeFiles: "backend/app/**"` | The function imports `app.main`, which lives outside `api/` |
+| `excludeFiles` | Keeps frontend dependencies/assets, native builds, local virtual environments, and tests out of the Python function |
 | `rewrites` | `/scene/*` and `/health` → the function, so the client keeps posting to the same paths it does in dev |
 | `maxDuration: 30` | Ask can wait on OpenAI |
 
 [api/index.py](../api/index.py) is a shim: it puts `backend/` on `sys.path` and exports the existing FastAPI app. No FastAPI code is duplicated, and nothing about the app changes for deployment.
+
+### Function bundle size
+
+Python packaging includes project files by default; `includeFiles` is additive, not an allowlist. The function's `excludeFiles` removes `node_modules`, Vite output, browser assets, iOS artifacts, local virtual environments, and test artifacts. Keep `backend/app/**`, especially `cafe_scene.json`: the API reads that fixture at runtime. Runtime packages are installed from `api/requirements.txt`.
+
+`.vercelignore` separately prevents local artifacts and environment files from being uploaded. Frontend source, models, public files (including `llms.txt`), and build scripts remain available to Vite and are served from the static build output; they are excluded only from the Python function.
+
+After changing packaging, use a fresh deployment build. The frontend's Three.js chunk-size warning is separate from the function's uncompressed size limit. Do not remove 3D models or split API routes just to fix accidental file inclusion.
 
 ### Environment variables
 
