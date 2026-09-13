@@ -27,7 +27,7 @@ The floor rectangle is `x ∈ [-width/2, width/2]`, `z ∈ [-depth/2, depth/2]`,
 | `category` | enum | `structure` \| `furniture` \| `opening` \| `equipment`. Drives edit rules. |
 | `position` | `[x, y, z]` | Centre in metres. |
 | `size` | `[sx, sy, sz]` | Full extents (not half-extents). |
-| `rotation` | `[rx, ry, rz]` \| null | Stored, not applied in the MVP viewer. |
+| `rotation` | `[rx, ry, rz]` \| null | XYZ Euler rotation in radians, applied to the object's local full extents, rendered asset, and collider. |
 | `material` | string \| null | `wood`, `fabric`, `glass`, `metal`, `plastic`, … |
 | `confidence` | number \| null | 0–1 when known. |
 | `color` | string \| null | Hex for the twin mesh. |

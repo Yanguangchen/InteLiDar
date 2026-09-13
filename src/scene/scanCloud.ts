@@ -1,3 +1,4 @@
+import { Euler, Vector3 } from 'three'
 import { revealWindowFor, scanBearing } from './scanReveal'
 import type { SceneObject, SceneRoom, Vec3 } from './types'
 
@@ -30,6 +31,8 @@ export function buildObjectCloud(object: SceneObject, origin: Vec3): ScanCloud {
 
   const faces = boxFaces(width, height, depth)
   const total = faces.reduce((sum, face) => sum + face.area, 0)
+  const rotation = new Euler(...(object.rotation ?? [0, 0, 0]))
+  const world = new Vector3()
 
   for (let index = 0; index < count; index += 1) {
     const face = pickFace(faces, random() * total)
@@ -40,7 +43,8 @@ export function buildObjectCloud(object: SceneObject, origin: Vec3): ScanCloud {
       face.centre[1] + face.u[1] * u + face.v[1] * v,
       face.centre[2] + face.u[2] * u + face.v[2] * v,
     ]
-    builder.push(local, object.position[0] + local[0], object.position[2] + local[2], origin, random)
+    world.fromArray(local).applyEuler(rotation)
+    builder.push(local, object.position[0] + world.x, object.position[2] + world.z, origin, random)
   }
 
   return builder.done()

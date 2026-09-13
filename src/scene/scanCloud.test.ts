@@ -64,6 +64,16 @@ describe('buildObjectCloud', () => {
     const unique = new Set(Array.from(cloud.seeds))
     expect(unique.size).toBeGreaterThan(cloud.count / 2)
   })
+
+  it('times rotated local returns using their world-space bearing', () => {
+    const rotated = buildObjectCloud({ ...table, rotation: [0, Math.PI / 2, 0] }, origin)
+    for (let index = 0; index < rotated.count; index += 1) {
+      const x = table.position[0] + rotated.positions[index * 3 + 2]
+      const z = table.position[2] - rotated.positions[index * 3]
+      const expected = revealWindowFor(scanBearing(x, z, origin))
+      expect(rotated.windows[index * 2 + 1]).toBeCloseTo(expected.end, 5)
+    }
+  })
 })
 
 describe('buildRoomCloud', () => {

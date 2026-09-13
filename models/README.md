@@ -57,13 +57,14 @@ In the Blender source, NLA tracks occupy idle frames 1–91, walk 121–157, and
 
 ## Three.js placement
 
-The repo's current viewer renders box geometry. This deliverable adds reusable assets; the viewer has not been changed to load them. Copy the `models` asset subfolders into a served public directory when integrating, or serve this directory explicitly. Paths in [manifest.json](manifest.json) are relative to `models/`.
+The reconstructed demo now loads the chair, table, shelf, and monitor through the [asset catalog](../src/assets/catalog.ts); desktop Play uses `avatar_casual`. Vite bundles those GLB URLs for development and production. Other library assets remain available for future placement. Paths in [manifest.json](manifest.json) are relative to `models/`. See [desktop rooms](../docs/playable-rooms.md) for controls and import setup.
 
 ```js
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { AnimationMixer } from 'three';
+import { avatarCasualUrl } from '../src/assets/catalog';
 
-const gltf = await new GLTFLoader().loadAsync('/models/avatars/avatar_casual.glb');
+const gltf = await new GLTFLoader().loadAsync(avatarCasualUrl);
 scene.add(gltf.scene);
 gltf.scene.position.set(x, floorY, z); // metres, floor origin
 const mixer = new AnimationMixer(gltf.scene);
@@ -99,4 +100,3 @@ node models/source/validate_three.mjs
 ```
 
 Running the standalone binary validator overwrites `validation.json` without Blender roundtrip sections. To generate the full report, run its `--blender-roundtrip` option inside Blender. Asset creation uses no third-party meshes, images, fonts baked into GLBs, or external material assets.
-

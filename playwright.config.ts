@@ -17,13 +17,14 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'npm run backend',
+      command: 'node scripts/backend.mjs serve',
+      env: { OPENAI_API_KEY: 'intelidar-e2e' },
       url: 'http://127.0.0.1:8000/health',
       reuseExistingServer: reuse,
       timeout: 30_000,
     },
     {
-      command: 'npm run dev -- --host 127.0.0.1 --port 5173',
+      command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173',
       url: 'http://127.0.0.1:5173',
       reuseExistingServer: reuse,
       timeout: 30_000,
