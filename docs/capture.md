@@ -1,6 +1,6 @@
 # Capture
 
-InteLiDar has a native RoomPlan capture source project for **LiDAR-equipped iPhones**, plus a scan-file importer in the web viewer. Safari does not access the LiDAR sensor directly.
+InteLiDar has a native RoomPlan capture source project for **LiDAR-equipped iPhones**, plus a scan-file importer in the web viewer. Safari does not access the LiDAR sensor directly — there is no web API that exposes it, and [getting real LiDAR in](./lidar-on-iphone.md) covers why, along with the three routes to a measured room and what each costs.
 
 The iOS source is in [ios/](../ios/README.md). It must be built and installed using Xcode on a Mac; there is no signed app or TestFlight release in this repository. Native compilation and real-device scanning remain unverified in the Windows development environment.
 
