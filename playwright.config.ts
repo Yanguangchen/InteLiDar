@@ -7,6 +7,8 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // Every scenario owns a WebGL context; keep the shared graphics device uncontended.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   use: {
     baseURL: 'http://127.0.0.1:5173',

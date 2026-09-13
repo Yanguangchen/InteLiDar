@@ -15,6 +15,7 @@ def test_demo_furniture_faces_into_room_and_monitor_rests_on_table() -> None:
         assert math.cos(chair.rotation[1]) * toward_table_z > 0
 
     monitor = objects['monitor-1']
+    assert monitor.rotation == pytest.approx((0, math.pi, 0))
     assert monitor.size == pytest.approx((0.58, 0.478, 0.2))
     assert monitor.position[1] - monitor.size[1] / 2 == pytest.approx(
         table.position[1] + table.size[1] / 2

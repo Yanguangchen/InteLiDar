@@ -1,5 +1,5 @@
 export type PlayerInput = { x: number; z: number; run: boolean }
-export type PlayerAnimation = 'idle' | 'walk' | 'run'
+export type PlayerAnimation = 'idle' | 'walk' | 'run' | 'sit_down' | 'seated_idle' | 'stand_up'
 export function movementVelocity(input: PlayerInput, yaw: number): [number, number] {
   const length = Math.max(1, Math.hypot(input.x, input.z))
   const speed = (input.run ? 3.2 : 1.6) / length
@@ -14,7 +14,8 @@ export function movementAnimation(distance: number, dt: number, running: boolean
 const MOVEMENT_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'])
 
 /** Installed only for the active play session; UI text fields retain their own keyboard input. */
-export function bindDesktopInput(canvas: HTMLCanvasElement, enabled: () => boolean, look: (dx: number, dy: number) => void) {
+export function bindDesktopInput(canvas: HTMLCanvasElement, enabled: () => boolean,
+  look: (dx: number, dy: number) => void, interact?: () => void) {
   const keys = new Set<string>()
   let pointer: number | null = null
   let lastX = 0
@@ -27,6 +28,14 @@ export function bindDesktopInput(canvas: HTMLCanvasElement, enabled: () => boole
   const onKeyDown = (event: KeyboardEvent) => {
     if (!enabled() || event.ctrlKey || event.metaKey || event.altKey) return
     if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable="true"]')) return
+    if (event.code === 'KeyE' && interact) {
+      event.preventDefault()
+      if (!event.repeat && !keys.has(event.code)) {
+        keys.add(event.code)
+        interact()
+      }
+      return
+    }
     if (!MOVEMENT_KEYS.has(event.code)) return
     event.preventDefault()
     keys.add(event.code)

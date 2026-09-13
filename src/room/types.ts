@@ -1,11 +1,12 @@
 import type { Group } from 'three'
 import type { Vec3 } from '../scene/types'
+import type { InteractionDefinition } from '../interaction/types'
 
 export type RoomBounds = { min: Vec3; max: Vec3 }
 
 export type RoomCollider =
-  | { kind: 'box'; center: Vec3; halfExtents: Vec3; rotation?: Vec3 }
-  | { kind: 'trimesh'; vertices: Float32Array; indices: Uint32Array }
+  | { kind: 'box'; center: Vec3; halfExtents: Vec3; rotation?: Vec3; objectId?: string }
+  | { kind: 'trimesh'; vertices: Float32Array; indices: Uint32Array; objectId?: string }
 
 /** Source-independent, meter-scaled input to gameplay; spawn is the feet position. */
 export type RoomEnvironment = {
@@ -13,6 +14,7 @@ export type RoomEnvironment = {
   bounds: RoomBounds
   colliders: RoomCollider[]
   spawn: Vec3
+  interactions?: InteractionDefinition[]
 }
 
 export type LoadedRoom = {

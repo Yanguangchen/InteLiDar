@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-12T19:32:41.224185+00:00",
+  "generated_at": "2026-09-13T05:23:11.781165+00:00",
   "root": "E:\\Projects\\InteLiDar\\models",
   "ok": true,
   "asset_count": 30,
   "total_triangles": 34960,
-  "total_file_bytes": 2350060,
+  "total_file_bytes": 2394940,
   "assets": [
     {
       "filename": "avatar_casual.glb",
       "path": "E:\\Projects\\InteLiDar\\models\\avatars\\avatar_casual.glb",
-      "file_bytes": 291840,
+      "file_bytes": 336720,
       "failures": [],
       "warnings": [],
       "materials": [
@@ -161,6 +161,21 @@
           "name": "run",
           "duration_seconds": 0.8,
           "channels": 63
+        },
+        {
+          "name": "sit_down",
+          "duration_seconds": 0.666667,
+          "channels": 63
+        },
+        {
+          "name": "seated_idle",
+          "duration_seconds": 3.0,
+          "channels": 63
+        },
+        {
+          "name": "stand_up",
+          "duration_seconds": 0.666667,
+          "channels": 63
         }
       ],
       "embedded_only": true,
@@ -174,7 +189,7 @@
         "mesh_count": 1,
         "armature_count": 1,
         "excluded_bone_display_helpers": [
-          "Icosphere.001"
+          "Icosphere"
         ],
         "bone_counts": [
           21
@@ -182,14 +197,14 @@
         "triangles": 4860,
         "vertices": 3785,
         "materials": [
-          "IDAR_dark.002",
-          "avatar_eye.002",
-          "avatar_hair_casual.002",
-          "avatar_lip.002",
-          "avatar_shoe_sole.002",
-          "avatar_skin_casual.002",
-          "avatar_top_casual.002",
-          "avatar_trousers_casual.002"
+          "IDAR_dark",
+          "avatar_eye",
+          "avatar_hair_casual",
+          "avatar_lip",
+          "avatar_shoe_sole",
+          "avatar_skin_casual",
+          "avatar_top_casual",
+          "avatar_trousers_casual"
         ],
         "bounds_z_up": {
           "min": [
@@ -209,9 +224,12 @@
           ]
         },
         "actions": [
-          "idle.001",
-          "run.001",
-          "walk.001"
+          "idle",
+          "run",
+          "seated_idle",
+          "sit_down",
+          "stand_up",
+          "walk"
         ],
         "ok": true
       }
@@ -384,7 +402,7 @@
         "mesh_count": 1,
         "armature_count": 1,
         "excluded_bone_display_helpers": [
-          "Icosphere.001"
+          "Icosphere"
         ],
         "bone_counts": [
           21
@@ -392,14 +410,14 @@
         "triangles": 4936,
         "vertices": 3817,
         "materials": [
-          "IDAR_dark.002",
-          "avatar_eye.002",
-          "avatar_hair_sporty.001",
-          "avatar_lip.002",
-          "avatar_skin_sporty.001",
-          "avatar_top_sporty.001",
-          "avatar_trousers_sporty.001",
-          "avatar_warm_white.001"
+          "IDAR_dark",
+          "avatar_eye",
+          "avatar_hair_sporty",
+          "avatar_lip",
+          "avatar_skin_sporty",
+          "avatar_top_sporty",
+          "avatar_trousers_sporty",
+          "avatar_warm_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -419,9 +437,9 @@
           ]
         },
         "actions": [
-          "idle.001",
-          "run.001",
-          "walk.001"
+          "idle",
+          "run",
+          "walk"
         ],
         "ok": true
       }
@@ -594,7 +612,7 @@
         "mesh_count": 1,
         "armature_count": 1,
         "excluded_bone_display_helpers": [
-          "Icosphere.001"
+          "Icosphere"
         ],
         "bone_counts": [
           21
@@ -602,14 +620,14 @@
         "triangles": 4460,
         "vertices": 3441,
         "materials": [
-          "IDAR_dark.002",
-          "avatar_eye.002",
-          "avatar_hair_stylized.001",
-          "avatar_lip.002",
-          "avatar_skin_stylized.001",
-          "avatar_top_stylized.001",
-          "avatar_trousers_stylized.001",
-          "avatar_warm_white.001"
+          "IDAR_dark",
+          "avatar_eye",
+          "avatar_hair_stylized",
+          "avatar_lip",
+          "avatar_skin_stylized",
+          "avatar_top_stylized",
+          "avatar_trousers_stylized",
+          "avatar_warm_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -629,9 +647,9 @@
           ]
         },
         "actions": [
-          "idle.001",
-          "run.001",
-          "walk.001"
+          "idle",
+          "run",
+          "walk"
         ],
         "ok": true
       }
@@ -738,10 +756,10 @@
         "triangles": 492,
         "vertices": 992,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_metal.001",
-          "IDAR_rubber.001",
-          "IDAR_white.001"
+          "IDAR_dark",
+          "IDAR_metal",
+          "IDAR_rubber",
+          "IDAR_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -840,8 +858,8 @@
         "triangles": 2440,
         "vertices": 5304,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_fabric_light.001"
+          "IDAR_dark",
+          "IDAR_fabric_light"
         ],
         "bounds_z_up": {
           "min": [
@@ -953,9 +971,9 @@
         "triangles": 2284,
         "vertices": 4904,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_metal.001",
-          "IDAR_screen.001"
+          "IDAR_dark",
+          "IDAR_metal",
+          "IDAR_screen"
         ],
         "bounds_z_up": {
           "min": [
@@ -1067,9 +1085,9 @@
         "triangles": 332,
         "vertices": 608,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_metal.001",
-          "IDAR_screen.001"
+          "IDAR_dark",
+          "IDAR_metal",
+          "IDAR_screen"
         ],
         "bounds_z_up": {
           "min": [
@@ -1181,9 +1199,9 @@
         "triangles": 332,
         "vertices": 608,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_metal.001",
-          "IDAR_screen.001"
+          "IDAR_dark",
+          "IDAR_metal",
+          "IDAR_screen"
         ],
         "bounds_z_up": {
           "min": [
@@ -1334,12 +1352,12 @@
         "triangles": 1172,
         "vertices": 2400,
         "materials": [
-          "IDAR_fabric_light.001",
-          "IDAR_linen.001",
-          "IDAR_oak.001",
-          "IDAR_sage.001",
-          "IDAR_walnut.001",
-          "IDAR_white.001"
+          "IDAR_fabric_light",
+          "IDAR_linen",
+          "IDAR_oak",
+          "IDAR_sage",
+          "IDAR_walnut",
+          "IDAR_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -1490,12 +1508,12 @@
         "triangles": 984,
         "vertices": 2016,
         "materials": [
-          "IDAR_fabric_light.001",
-          "IDAR_linen.001",
-          "IDAR_oak.001",
-          "IDAR_sage.001",
-          "IDAR_walnut.001",
-          "IDAR_white.001"
+          "IDAR_fabric_light",
+          "IDAR_linen",
+          "IDAR_oak",
+          "IDAR_sage",
+          "IDAR_walnut",
+          "IDAR_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -1672,14 +1690,14 @@
         "triangles": 908,
         "vertices": 1960,
         "materials": [
-          "IDAR_blue.001",
-          "IDAR_dark.002",
-          "IDAR_fabric_light.001",
-          "IDAR_linen.001",
-          "IDAR_metal.001",
-          "IDAR_oak.001",
-          "IDAR_sage.001",
-          "IDAR_walnut.001"
+          "IDAR_blue",
+          "IDAR_dark",
+          "IDAR_fabric_light",
+          "IDAR_linen",
+          "IDAR_metal",
+          "IDAR_oak",
+          "IDAR_sage",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -1791,9 +1809,9 @@
         "triangles": 616,
         "vertices": 1344,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_dark",
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -1918,10 +1936,10 @@
         "triangles": 1168,
         "vertices": 1944,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_fabric.001",
-          "IDAR_metal.001",
-          "IDAR_rubber.001"
+          "IDAR_dark",
+          "IDAR_fabric",
+          "IDAR_metal",
+          "IDAR_rubber"
         ],
         "bounds_z_up": {
           "min": [
@@ -2033,9 +2051,9 @@
         "triangles": 480,
         "vertices": 1008,
         "materials": [
-          "IDAR_fabric_light.001",
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_fabric_light",
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -2147,9 +2165,9 @@
         "triangles": 504,
         "vertices": 1080,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_dark",
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -2248,8 +2266,8 @@
         "triangles": 396,
         "vertices": 544,
         "materials": [
-          "IDAR_metal.001",
-          "IDAR_oak.001"
+          "IDAR_metal",
+          "IDAR_oak"
         ],
         "bounds_z_up": {
           "min": [
@@ -2374,10 +2392,10 @@
         "triangles": 496,
         "vertices": 578,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_fabric_light.001",
-          "IDAR_metal.001",
-          "IDAR_white.001"
+          "IDAR_dark",
+          "IDAR_fabric_light",
+          "IDAR_metal",
+          "IDAR_white"
         ],
         "bounds_z_up": {
           "min": [
@@ -2476,8 +2494,8 @@
         "triangles": 132,
         "vertices": 264,
         "materials": [
-          "IDAR_fabric.001",
-          "IDAR_linen.001"
+          "IDAR_fabric",
+          "IDAR_linen"
         ],
         "bounds_z_up": {
           "min": [
@@ -2589,9 +2607,9 @@
         "triangles": 380,
         "vertices": 808,
         "materials": [
-          "IDAR_dark.002",
-          "IDAR_metal.001",
-          "IDAR_oak.001"
+          "IDAR_dark",
+          "IDAR_metal",
+          "IDAR_oak"
         ],
         "bounds_z_up": {
           "min": [
@@ -2703,9 +2721,9 @@
         "triangles": 1600,
         "vertices": 3288,
         "materials": [
-          "IDAR_fabric.001",
-          "IDAR_fabric_light.001",
-          "IDAR_walnut.001"
+          "IDAR_fabric",
+          "IDAR_fabric_light",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -2817,9 +2835,9 @@
         "triangles": 1976,
         "vertices": 4056,
         "materials": [
-          "IDAR_fabric.001",
-          "IDAR_fabric_light.001",
-          "IDAR_walnut.001"
+          "IDAR_fabric",
+          "IDAR_fabric_light",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -2918,8 +2936,8 @@
         "triangles": 348,
         "vertices": 456,
         "materials": [
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3018,8 +3036,8 @@
         "triangles": 284,
         "vertices": 600,
         "materials": [
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3118,8 +3136,8 @@
         "triangles": 372,
         "vertices": 792,
         "materials": [
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3218,8 +3236,8 @@
         "triangles": 284,
         "vertices": 600,
         "materials": [
-          "IDAR_oak.001",
-          "IDAR_walnut.001"
+          "IDAR_oak",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3305,7 +3323,7 @@
         "triangles": 236,
         "vertices": 224,
         "materials": [
-          "IDAR_dark.002"
+          "IDAR_dark"
         ],
         "bounds_z_up": {
           "min": [
@@ -3443,11 +3461,11 @@
         "triangles": 900,
         "vertices": 1476,
         "materials": [
-          "IDAR_ceramic.001",
-          "IDAR_leaf.001",
-          "IDAR_leaf_light.001",
-          "IDAR_soil.001",
-          "IDAR_walnut.001"
+          "IDAR_ceramic",
+          "IDAR_leaf",
+          "IDAR_leaf_light",
+          "IDAR_soil",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3585,11 +3603,11 @@
         "triangles": 760,
         "vertices": 1200,
         "materials": [
-          "IDAR_leaf.001",
-          "IDAR_leaf_light.001",
-          "IDAR_soil.001",
-          "IDAR_terracotta.001",
-          "IDAR_walnut.001"
+          "IDAR_leaf",
+          "IDAR_leaf_light",
+          "IDAR_soil",
+          "IDAR_terracotta",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3727,11 +3745,11 @@
         "triangles": 592,
         "vertices": 857,
         "materials": [
-          "IDAR_ceramic.001",
-          "IDAR_leaf.001",
-          "IDAR_leaf_light.001",
-          "IDAR_soil.001",
-          "IDAR_walnut.001"
+          "IDAR_ceramic",
+          "IDAR_leaf",
+          "IDAR_leaf_light",
+          "IDAR_soil",
+          "IDAR_walnut"
         ],
         "bounds_z_up": {
           "min": [
@@ -3817,7 +3835,7 @@
         "triangles": 236,
         "vertices": 224,
         "materials": [
-          "IDAR_terracotta.001"
+          "IDAR_terracotta"
         ],
         "bounds_z_up": {
           "min": [
@@ -3841,6 +3859,5 @@
       }
     }
   ],
-  "failures": [],
-  "blender_roundtrip_pass_count": 30
+  "failures": []
 }

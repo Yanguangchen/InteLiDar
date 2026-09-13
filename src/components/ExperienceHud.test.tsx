@@ -43,4 +43,41 @@ describe('desktop room controls', () => {
     rerender(<ImportSetupHud {...props} valid />)
     expect(screen.getByRole('button', { name: 'Open room' })).toBeEnabled()
   })
+
+  it('offers a keyboard-labelled clickable interaction and updates the action without changing controls', async () => {
+    const user = userEvent.setup()
+    const onInteract = vi.fn()
+    const props = { ready: true, paused: false, name: 'Meeting room', onResume: vi.fn(), onExit: vi.fn(),
+      onReset: vi.fn(), settings: PRESETS.low, onSettingsChange: vi.fn(), onInteract }
+    const { rerender } = render(<PlayHud {...props} interaction={{ label: 'Sit on chair', available: true }} />)
+    const button = screen.getByRole('button', { name: 'Sit on chair' })
+    expect(button).toHaveAttribute('aria-keyshortcuts', 'E')
+    expect(screen.getByLabelText('Desktop controls')).toHaveTextContent('E Interact')
+    await user.click(button)
+    expect(onInteract).toHaveBeenCalledOnce()
+    rerender(<PlayHud {...props} interaction={{ label: 'Stand up', available: true }} />)
+    expect(screen.queryByRole('button', { name: 'Sit on chair' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Stand up' })).toBeEnabled()
+  })
+
+  it('explains unavailable interactions and hides them while loading or paused', async () => {
+    const user = userEvent.setup()
+    const onInteract = vi.fn()
+    const props = { ready: true, paused: false, name: 'Meeting room', onResume: vi.fn(), onExit: vi.fn(),
+      onReset: vi.fn(), settings: PRESETS.low, onSettingsChange: vi.fn(), onInteract,
+      interaction: { label: 'Sit on chair', available: false, reason: 'Move to the front of the chair.' } }
+    const { rerender } = render(<PlayHud {...props} />)
+    const button = screen.getByRole('button', { name: 'Sit on chair' })
+    expect(button).toBeDisabled()
+    expect(button).toHaveAccessibleDescription('Move to the front of the chair.')
+    expect(screen.getByRole('status')).toHaveTextContent('Move to the front of the chair.')
+    await user.click(button)
+    expect(onInteract).not.toHaveBeenCalled()
+    rerender(<PlayHud {...props} paused />)
+    expect(screen.queryByRole('button', { name: 'Sit on chair' })).not.toBeInTheDocument()
+    rerender(<PlayHud {...props} ready={false} />)
+    expect(screen.queryByRole('button', { name: 'Sit on chair' })).not.toBeInTheDocument()
+    rerender(<PlayHud {...props} interaction={null} />)
+    expect(screen.queryByRole('button', { name: 'Sit on chair' })).not.toBeInTheDocument()
+  })
 })

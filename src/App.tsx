@@ -9,6 +9,8 @@ import { usePlaySession } from './experience/usePlaySession'
 import { useRoomImport } from './experience/useRoomImport'
 import { PlayerMount } from './experience/PlayerMount'
 import type { PlayerTelemetry } from './player/PlayerWorld'
+import { reconcileToggles, type InteractionSnapshot } from './interaction/session'
+import { interactionsForGraph } from './interaction/profiles'
 import { demoEnvironment } from './room/demoEnvironment'
 import { normalizeRoom } from './room/importRoom'
 import type { NormalizedRoom } from './room/types'
@@ -62,6 +64,10 @@ export default function App() {
   const [assetsReady, setAssetsReady] = useState(false)
   const [playError, setPlayError] = useState<string | null>(null)
   const play = usePlaySession()
+  const [interaction, setInteraction] = useState<InteractionSnapshot | null>(null)
+  const [interactionRequest, setInteractionRequest] = useState(0)
+  const [toggles, setToggles] = useState<Record<string, boolean>>({})
+  const onToggle = useCallback((id: string) => setToggles(current => ({ ...current, [id]: !current[id] })), [])
   const rooms = useRoomImport()
   const [unitScale, setUnitScale] = useState(1)
   const [floorPoint, setFloorPoint] = useState<Vec3 | null>(null)
@@ -82,6 +88,13 @@ export default function App() {
   const importedView = rooms.candidate ?? rooms.current?.loaded ?? null
   const roomName = rooms.current?.loaded.name ?? displayGraph?.room.name ?? 'Meeting room'
   const importedCapture = displayGraph?.source === 'roomplan'
+  useEffect(() => {
+    const definitions = displayGraph ? interactionsForGraph(displayGraph) : []
+    setToggles(current => {
+      const next = reconcileToggles(current, definitions)
+      return Object.keys(next).length === Object.keys(current).length ? current : next
+    })
+  }, [displayGraph])
   // The sweep only starts once there is geometry for the sensor to find, and a
   // duration of 0 hands over a finished scan when animation is switched off.
   const { progress: scanProgress, skip: skipScan } = useScanProgress(
@@ -116,7 +129,7 @@ export default function App() {
   }, [rooms.candidate])
 
   useEffect(() => {
-    if (!play.active) delete window.__intelidarPlay
+    if (!play.active) { delete window.__intelidarPlay; setInteraction(null) }
     return () => { delete window.__intelidarPlay }
   }, [play.active])
 
@@ -224,6 +237,8 @@ export default function App() {
 
   function onImportCapture(scene: SceneGraph) {
     play.exit()
+    setToggles({})
+    setInteraction(null)
     setPlayError(null)
     sceneVersion.current += 1
     imported.current = true
@@ -344,6 +359,8 @@ export default function App() {
           onMoveObject={onMoveObject}
           onSelectObject={(id) => setHighlightedIds([id])}
           gameplayActive={play.active}
+          interactionTargetId={play.active ? interaction?.targetId : null}
+          toggles={toggles}
           onAssetsReady={setAssetsReady}
         />}
         {play.active && environment && <PlayerMount
@@ -355,11 +372,16 @@ export default function App() {
           onError={onPlayerError}
           allowSpawnSearch={!rooms.current}
           onTelemetry={onTelemetry}
+          interactionRequest={interactionRequest}
+          onInteractionChange={setInteraction}
+          toggles={toggles}
+          onToggle={onToggle}
         />}
         <SceneInspection graph={importedView ? null : displayGraph} />
       </Canvas>
       {play.active ? <PlayHud name={roomName} ready={play.ready} paused={play.paused}
         onExit={play.exit} onReset={play.reset} onResume={play.resume} settings={settings} onSettingsChange={setSettings}
+        interaction={interaction?.label ? interaction : null} onInteract={() => setInteractionRequest(value => value + 1)}
       /> : rooms.candidate ? <ImportSetupHud
         name={rooms.candidate.name}
         dimensions={rooms.candidate.bounds.max.map((value, index) => value - rooms.candidate!.bounds.min[index]) as Vec3}
