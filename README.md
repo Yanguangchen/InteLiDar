@@ -39,6 +39,7 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | [Design](./design.md) | Engineering map, constraints, build order |
 | [Architecture](./docs/architecture.md) | Layers, data flow, frontend state |
 | [Capture](./docs/capture.md) | What the "scanner" really is, and the ingest seam |
+| [Capture geometry](./docs/capture-geometry.md) | Squaring a scan up, bounds, origin, precision |
 | [Export](./docs/export.md) | Scan file, object schedule, floor plan, 3D model |
 | [HTTP API](./docs/api.md) | Ingest, reconstruct, ask, examples |
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
