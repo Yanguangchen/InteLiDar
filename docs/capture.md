@@ -18,6 +18,8 @@ generator, each of which must declare the matching `source`. A file may name a m
 unknown ids are rejected, and model urls are always resolved from the library rather than taken from the file. Generic
 RoomPlan JSON, USDZ, OBJ, GLB, PLY, LAS, and E57 are not supported. The importer expects normalized room bounds and object boxes, not an arbitrary mesh or point cloud.
 
+A saved, self-contained GLB is a different path: open it through **Import room** for embedded textures, floor/unit setup, and desktop gameplay. See [playable rooms](./playable-rooms.md).
+
 ## No iPhone? Use the simulated floor
 
 **Import scan → Load simulated scan** opens a generated **open-plan office floor**: 18 × 11.6 × 3.1 m, 106 objects across a

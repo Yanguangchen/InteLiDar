@@ -7,6 +7,7 @@ import { CaptureImport } from './CaptureImport'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
+  experienceActions?: ReactNode
   mode: SceneMode
   graph: SceneGraph | null
   scanProgress: number
@@ -57,6 +58,7 @@ function rawLabel(object: SceneObject): string {
 }
 
 export function Hud({
+  experienceActions,
   mode,
   graph,
   scanProgress,
@@ -102,6 +104,7 @@ export function Hud({
           </div>
         </div>
         <div className="topbar-actions">
+          {experienceActions}
           {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
           {onToggleRenovation && <button type="button" className={`chip ${renovating ? 'on' : ''}`} aria-pressed={Boolean(renovating)} disabled={!reconstructed} onClick={onToggleRenovation}>Renovate</button>}
           <button
