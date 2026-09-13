@@ -18,11 +18,11 @@ def test_reconstruct_preserves_custom_appearance() -> None:
     assert table.size == raw.objects[0].size
 
 
-def test_demo_contains_different_chair_styles_and_colors() -> None:
+def test_demo_contains_photo_cafe_office_and_bar_seating() -> None:
     result = reconstruct_scene(ingest_capture(IngestRequest()))
     chairs = [obj for obj in result.graph.objects if obj.type == "chair"]
-    assert len({chair.color for chair in chairs}) == 4
-    assert {chair.shape for chair in chairs} >= {"task", "armchair", "visitor"}
+    assert {chair.asset_id for chair in chairs} == {"chair_cafe", "chair_office", "stool_bar"}
+    assert any(chair.color == "#eeeee6" for chair in chairs)
 
 
 def test_roomplan_reconstruction_preserves_device_labels_without_demo_id_lookup() -> None:
@@ -54,15 +54,15 @@ def test_reconstruct_keeps_ids_and_labels_demo_objects() -> None:
     assert [obj.id for obj in result.graph.objects] == [obj.id for obj in raw.objects]
     table = next(obj for obj in result.graph.objects if obj.id == "table-1")
     assert table.type == "table"
-    assert table.label == "Conference table"
+    assert table.label == "Café table · front"
     assert table.category == "furniture"
-    assert table.material == "wood"
-    assert table.confidence is not None and table.confidence > 0
+    assert table.asset_id == "table_cafe"
+    assert table.confidence is None  # Photo estimates are not sensor confidence.
 
     chairs = [obj for obj in result.graph.objects if obj.type == "chair"]
-    assert len(chairs) == 4
+    assert len(chairs) == 11
     assert result.analysis_steps
-    assert {step.to for step in result.analysis_steps} >= {"Table", "Chair × 4", "Door"}
+    assert {step.to for step in result.analysis_steps} >= {"Table × 5", "Chair × 11", "Door"}
 
 
 def test_reconstruct_classifies_unknown_geometry_without_demo_ids() -> None:

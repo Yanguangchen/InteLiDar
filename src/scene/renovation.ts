@@ -33,7 +33,7 @@ export function addFurniture(graph: SceneGraph, assetId: string, id: string, bas
     candidates.push([-rangeX + x / nx * rangeX * 2, -rangeZ + z / nz * rangeZ * 2])
   }
   candidates.sort((a, b) => a[0] ** 2 + a[1] ** 2 - b[0] ** 2 - b[1] ** 2)
-  const obstacles = graph.objects.filter((item) => item.type !== 'rug').map(objectBounds)
+  const obstacles = graph.objects.filter((item) => item.type !== 'rug' && item.type !== 'floor').map(objectBounds)
   for (const [x, z] of candidates) {
     object.position = [x, baseHeight + h / 2, z]
     const bounds = objectBounds(object).expandByScalar(-0.002)

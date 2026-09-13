@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.fixtures import demo_twin_graph
 from app.models import CaptureObject, IngestRequest, Room
 from app.services.ingest import ingest_capture
 
@@ -7,21 +8,9 @@ from app.services.ingest import ingest_capture
 def test_ingest_demo_returns_raw_unknown_objects_with_stable_ids() -> None:
     graph = ingest_capture(IngestRequest())
 
-    assert graph.room.width == 7.4
-    assert graph.room.depth == 5.2
-    assert graph.room.height == 2.8
+    assert (graph.room.width, graph.room.depth, graph.room.height) == (6.4, 9.6, 3.4)
     assert graph.room.units == "m"
-    assert [obj.id for obj in graph.objects] == [
-        "table-1",
-        "chair-1",
-        "chair-2",
-        "chair-3",
-        "chair-4",
-        "monitor-1",
-        "shelf-1",
-        "door-1",
-        "window-1",
-    ]
+    assert [obj.id for obj in graph.objects] == [obj.id for obj in demo_twin_graph().objects]
     assert all(obj.type == "unknown" for obj in graph.objects)
 
 

@@ -25,6 +25,14 @@ function withFurniture(object: SceneObject, test: (blocked: (point: Vec3) => boo
 }
 
 describe('furniture component collisions', () => {
+  it('keeps café table knee space open while retaining the pedestal, feet, and top', () => {
+    withFurniture({ ...table, assetId: 'table_cafe', size: [.76, .74059, .76], position: [0, .370295, 0] }, blocked => {
+      expect(blocked([.3, .4, 0])).toBe(false)
+      expect(blocked([0, .4, 0])).toBe(true)
+      expect(blocked([.2, .73, .2])).toBe(true)
+      expect(blocked([.22, .045, 0])).toBe(true)
+    })
+  })
   for (const assetId of [undefined, 'table_dining']) it(`keeps clear under-table space for ${assetId ?? 'demo dining table'} while blocking its legs, apron, and top`, () => {
     withFurniture({ ...table, assetId }, blocked => {
       expect(blocked([0, .3, 0])).toBe(false)

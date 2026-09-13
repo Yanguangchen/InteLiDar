@@ -30,6 +30,12 @@ export function furnitureColliders(object: SceneObject): RoomCollider[] {
     sourceBox([1.4, .045, .8], [0, .7275, 0])
     for (const x of [-.615, .615]) for (const z of [-.315, .315]) sourceBox([.06, .705, .06], [x, .3525, z])
     for (const z of [-.315, .315]) sourceBox([1.28, .085, .025], [0, .655, z])
+  } else if (object.assetId === 'table_cafe') {
+    // The café pedestal has open knee space. Feet remain obstacles near the floor.
+    box([1, .048, 1], [0, .476, 0])
+    box([.10, .905, .10], [0, -.014, 0])
+    box([.85, .12, .066], [0, -.44, 0])
+    box([.066, .12, .85], [0, -.44, 0])
   } else if (!object.assetId && object.type === 'table') {
     const shape = shapeFor(object)
     if (shape === 'oval') cylinder(.5, .075, [0, .4625, 0])

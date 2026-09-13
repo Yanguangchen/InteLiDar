@@ -5,12 +5,16 @@ import { moveObject } from './editScene'
 import { sampleGraph } from '../test/sampleGraph'
 
 describe('renovation', () => {
-  it('uses all 26 decor/furniture/electronics props from the model manifest', () => {
-    expect(FURNITURE_CATALOG).toHaveLength(26)
+  it('uses the original library and photo-demo props from the model manifest', () => {
+    expect(FURNITURE_CATALOG).toHaveLength(38)
     expect(FURNITURE_CATALOG.every((asset) => asset.url && asset.size.every((n) => n > 0))).toBe(true)
     expect(furnitureAsset('sofa_2seat')?.size).toEqual([1.62, 0.86, 0.86])
     expect(furnitureAsset('avatar_casual')).toBeUndefined()
     expect(furnitureAsset('door_simple')).toBeUndefined()
+  })
+  it('can place furniture on the photo demo’s decorative floor', () => {
+    const graph = { ...sampleGraph, objects: [{ id: 'oak', type: 'floor', label: 'Oak', category: 'structure', position: [0, .004, 0] as [number, number, number], size: [7.4, .008, 5.2] as [number, number, number] }] }
+    expect(addFurniture(graph, 'chair_cafe', 'new-chair').graph.objects.at(-1)?.id).toBe('new-chair')
   })
   it('adds a model at its real dimensions and finds space away from existing furniture', () => {
     const added = addFurniture(sampleGraph, 'sofa_2seat', 'new-sofa')

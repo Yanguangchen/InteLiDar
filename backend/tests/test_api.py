@@ -26,7 +26,7 @@ def test_ingest_reconstruct_ask_http_contract() -> None:
     ingested = client.post("/scene/ingest", json={})
     assert ingested.status_code == 200
     raw = ingested.json()
-    assert raw["room"]["width"] == 7.4
+    assert raw["room"]["width"] == 6.4
     assert all(obj["type"] == "unknown" for obj in raw["objects"])
 
     reconstructed = client.post("/scene/reconstruct", json={"graph": raw})
@@ -41,7 +41,7 @@ def test_ingest_reconstruct_ask_http_contract() -> None:
     payload = asked.json()
     assert payload["reply"].startswith("stub:")
     assert "ghost" not in payload["highlightIds"]
-    assert set(payload["highlightIds"]) == {"chair-1", "chair-2", "chair-3", "chair-4"}
+    assert set(payload["highlightIds"]) == {obj["id"] for obj in graph["objects"] if obj["type"] == "chair"}
 
 
 def test_ask_blank_question_is_400() -> None:
@@ -59,7 +59,7 @@ def test_ask_http_heuristic_highlights_existing_ids() -> None:
     response = client.post("/scene/ask", json={"graph": graph, "question": "Show me all the chairs."})
     assert response.status_code == 200
     payload = response.json()
-    assert set(payload["highlightIds"]) == {"chair-1", "chair-2", "chair-3", "chair-4"}
+    assert set(payload["highlightIds"]) == {obj["id"] for obj in graph["objects"] if obj["type"] == "chair"}
     assert "chair" in payload["reply"].lower()
 
 

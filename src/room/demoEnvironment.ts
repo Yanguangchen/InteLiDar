@@ -41,7 +41,9 @@ export function demoEnvironment(graph: SceneGraph): RoomEnvironment {
   }
   // Start near the rear quarter of the room, with a corridor for the default
   // camera behind the avatar. A clear capsule alone can still put it at a shelf.
-  const preferred = new Vector3(halfWidth / 2, 0.02, -halfDepth + 0.7)
+  // In the photo café, look toward the bar from the main aisle. Leave three
+  // metres behind the avatar for the follow camera, just as in the photo.
+  const preferred = new Vector3(halfWidth / 2, 0.02, graph.room.id === 'photo-cafe-8179' ? halfDepth - 3.5 : -halfDepth + 0.7)
   candidates.sort((a, b) => new Vector3(...a).distanceToSquared(preferred) - new Vector3(...b).distanceToSquared(preferred))
   const cameraDirection = new Vector3(0, Math.sin(0.17), Math.cos(0.17))
   const clearCamera = candidates.find(candidate => {

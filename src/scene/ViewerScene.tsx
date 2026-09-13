@@ -308,13 +308,13 @@ function RoomShell({
   const surfaces = useMemo(
     () => ({
       wall: new MeshStandardMaterial({
-        color: new Color('#d9d3c7'),
+        color: new Color(room.id === 'photo-cafe-8179' ? '#665448' : '#d9d3c7'),
         roughness: 0.86,
         transparent: true,
         opacity: 0,
       }),
       floor: new MeshStandardMaterial({
-        color: new Color('#b08968'),
+        color: new Color(room.id === 'photo-cafe-8179' ? '#cba778' : '#b08968'),
         roughness: 0.74,
         transparent: true,
         opacity: 0,
@@ -326,13 +326,13 @@ function RoomShell({
         opacity: 0,
       }),
       openWall: new MeshStandardMaterial({
-        color: new Color('#cfd8dc'),
+        color: new Color(room.id === 'photo-cafe-8179' ? '#a99b88' : '#cfd8dc'),
         roughness: 0.7,
         transparent: true,
         opacity: 0,
       }),
     }),
-    [],
+    [room.id],
   )
 
   const rawGroup = useRef<Group>(null)

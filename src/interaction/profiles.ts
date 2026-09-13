@@ -29,6 +29,7 @@ export function objectAnchor(object: SceneObject, normalized: Vec3): Vec3 {
 function seatAnchors(object: SceneObject): Vec3[] {
   const profile = object.assetId || (usesDemoFurniture(object) && object.type === 'chair' ? 'chair_standard' : object.type)
   // These constants are measured from models/source/build_pack.py and checked against bundled GLB surfaces.
+  if (profile === 'chair_cafe') return [[0, (0.4775 - 0.0123464966) / 0.8176535034 - 0.5, 0]]
   if (profile === 'chair_standard') return [STANDARD_CHAIR_SEAT]
   if (profile === 'chair_office') return [[0, 0.4875 / 0.97 - 0.5, 0.005 / 0.5851022]]
   if (profile === 'stool_round') return [[0, 0.5, 0]]
@@ -54,7 +55,7 @@ export function interactionsForObject(object: SceneObject): InteractionDefinitio
     return seats.map((local, index) => {
       const seat = objectAnchor(object, local)
       const approach = objectAnchor(object, [local[0], -0.5, 0.5 + 0.42 / object.size[2]])
-      const armless = object.assetId ? ['chair_standard', 'stool_round'].includes(object.assetId) : object.type === 'chair' && object.shape !== 'armchair'
+      const armless = object.assetId ? ['chair_cafe', 'chair_standard', 'stool_round'].includes(object.assetId) : object.type === 'chair' && object.shape !== 'armchair'
       const approaches = armless ? [-1, 1].map((side) => objectAnchor(object,
         [local[0] + side * (0.5 + 0.50 / object.size[0]), -0.5, local[2] + 0.02 / object.size[2]])) : undefined
       return { kind: 'seat', id: `${object.id}:seat:${index}`, objectId: object.id,

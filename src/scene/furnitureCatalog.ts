@@ -3,6 +3,11 @@ import type { Vec3 } from './types'
 
 const files = import.meta.glob(['../../models/{furniture,plants,electronics}/*.glb', '!../../models/furniture/door_simple.glb'], { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 const LABELS: Record<string, string> = {
+  table_cafe: 'Café table', chair_cafe: 'Café chair', stool_bar: 'Bar stool',
+  counter_cafe: 'Stone café bar', coffee_machine: 'Espresso machine',
+  chess_king: 'Chess king', chess_pawn: 'Chess pawn', books_stack: 'Stacked books',
+  pendant_cafe: 'Silver pendant', mountain_art: 'Mountain artwork',
+  track_ceiling: 'Ceiling spotlights', floor_oak_cafe: 'Oak floor',
   chair_standard: 'Dining chair', chair_office: 'Office chair', stool_round: 'Round stool',
   table_dining: 'Dining table', table_side: 'Side table', table_coffee: 'Coffee table',
   cabinet_simple: 'Cabinet', shelf_open: 'Open shelf', bookshelf: 'Bookshelf', desk_small: 'Desk',

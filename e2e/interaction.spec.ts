@@ -103,7 +103,7 @@ async function addFurniture(page: Page, name: string, search: string) {
   return page.getByLabel('Selected in room').inputValue()
 }
 
-test('original demo chair can be reached from beside the conference table', async ({ page }, testInfo) => {
+test('photo café chair can be reached from the main aisle', async ({ page }, testInfo) => {
   test.setTimeout(120_000)
   await page.goto('/')
   await page.getByRole('button', { name: /^skip$/i }).click({ timeout: 20_000 })
@@ -111,9 +111,9 @@ test('original demo chair can be reached from beside the conference table', asyn
   await expect(page.getByText('Semantic twin')).toBeVisible({ timeout: 20_000 })
   await gameplayQuality(page, true)
   await enterPlay(page)
-  await walkTo(page, 1.75, -1.65)
-  await walkTo(page, 1.65, -.85)
-  await faceObject(page, 'chair-4', [.7, -.85])
+  await walkTo(page, 1.6, 2.05)
+  await walkTo(page, .36, 1.95)
+  await faceObject(page, 'chair-2', [.36, 1.15])
   await expect(page.getByRole('button', { name: 'Sit on chair', exact: true })).toBeEnabled()
   await page.keyboard.press('e')
   await expect.poll(async () => (await state(page)).interaction.phase).toBe('seated')

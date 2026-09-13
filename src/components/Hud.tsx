@@ -90,7 +90,9 @@ export function Hud({
   const objects = graph?.objects ?? []
   const detected = reconstructed ? objects : revealedObjects(graph, scanProgress)
   const found = new Set(detected.map((object) => object.id))
-  const provenance = (graph?.source && PROVENANCE[graph.source]) || DEMO_PROVENANCE
+  const provenance = graph?.room.id === 'photo-cafe-8179'
+    ? { tag: 'A room from a photograph.', source: 'Photo demo · estimated dimensions' }
+    : (graph?.source && PROVENANCE[graph.source]) || DEMO_PROVENANCE
 
   return (
     <div className="hud">

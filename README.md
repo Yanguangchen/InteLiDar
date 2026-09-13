@@ -1,5 +1,7 @@
 # InteLiDar
 
+The default demo now recreates the supplied café photograph using 24 model types, including original chess pieces. See [Photo café demo](docs/photo-demo.md) for the estimated layout and asset sources.
+
 > Scan reality. Let AI understand and reconstruct it.
 
 InteLiDar turns a physical room into an interactive **semantic digital twin**.

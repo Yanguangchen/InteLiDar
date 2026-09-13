@@ -1,5 +1,7 @@
 # InteliDar Indoor Essentials
 
+The library now also includes **12 photo café props** (42 GLBs total). See the [photo demo guide](../docs/photo-demo.md) for the layout, reused assets, chess models, and reproducible generator. The original-library counts and validation reports below cover the original 30 assets.
+
 30 original, lightweight Blender assets for LiDAR room environments and Three.js. All 30 GLBs are self-contained: no textures, external buffers, branding, or decoder dependencies.
 
 - **GLB total:** 34,960 triangles; approximately 2.28 MiB. Exact byte counts are in the validation reports.

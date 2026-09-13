@@ -34,7 +34,7 @@ def test_keeps_bodies_intact_through_the_prefix():
     assert direct.status_code == 200
     assert prefixed.status_code == 200
     assert prefixed.json() == direct.json()
-    assert len(prefixed.json()["objects"]) == 9
+    assert len(prefixed.json()["objects"]) == 53
 
 
 def test_does_not_strip_a_path_that_merely_starts_with_the_same_letters():

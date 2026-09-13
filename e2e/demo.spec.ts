@@ -31,21 +31,18 @@ test('demo path: sweep, reconstruct, ask chairs, then enable edit', async ({ pag
   await expect(page.getByText(/drag tables, chairs, and equipment/i)).toBeVisible()
 
   await page.getByLabel('Object', { exact: true }).selectOption('table-1')
-  await page.getByLabel('Shape', { exact: true }).selectOption('oval')
-  await page.getByLabel('Material', { exact: true }).selectOption('stone')
+  await expect(page.getByLabel('Shape', { exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Use color #467568' }).click()
   await expect(page.getByLabel('Color', { exact: true })).toHaveValue('#467568')
   await page.getByLabel('Object', { exact: true }).selectOption('chair-2')
-  await expect(page.getByLabel('Shape', { exact: true })).toHaveValue('armchair')
+  await expect(page.getByRole('button', { name: 'Restore model colors' })).toBeVisible()
   await page.getByLabel('Object', { exact: true }).selectOption('table-1')
-  await expect(page.getByLabel('Shape', { exact: true })).toHaveValue('oval')
-  await expect(page.getByLabel('Material', { exact: true })).toHaveValue('stone')
   await expect(page.getByLabel('Color', { exact: true })).toHaveValue('#467568')
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.getByRole('complementary', { name: 'Object appearance' })).toBeVisible()
-  await page.getByLabel('Shape', { exact: true }).selectOption('rectangular')
-  await expect(page.getByLabel('Shape', { exact: true })).toHaveValue('rectangular')
+  await page.getByRole('button', { name: 'Restore model colors' }).click()
+  await expect(page.getByLabel('Color', { exact: true })).toHaveValue('#a58a68')
 })
 
 test('graphics menu turns the expensive effects off, and remembers', async ({ page }) => {

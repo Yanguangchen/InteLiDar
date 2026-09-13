@@ -19,7 +19,7 @@ async function load(id: string) {
 }
 
 describe('interaction anchors against shipped geometry', () => {
-  for (const assetId of ['chair_standard', 'chair_office', 'stool_round', 'sofa_2seat', 'sofa_3seat']) {
+  for (const assetId of ['chair_cafe', 'chair_standard', 'chair_office', 'stool_round', 'sofa_2seat', 'sofa_3seat']) {
     it(`${assetId} contacts every visible cushion after scaling, centering, and rotation`, async () => {
       const asset = furnitureAsset(assetId)!
       const object: SceneObject = { id: 'seat', type: asset.type, assetId, label: asset.name, category: 'furniture',
@@ -30,7 +30,9 @@ describe('interaction anchors against shipped geometry', () => {
       placement.position.set(...object.position)
       placement.rotation.set(...object.rotation!)
       placement.updateMatrixWorld(true)
-      for (const seat of interactionsForObject(object)) {
+      const interactions = interactionsForObject(object)
+      expect(interactions.length).toBeGreaterThan(0)
+      for (const seat of interactions) {
         if (seat.kind !== 'seat') throw new Error('Expected a seat')
         const ray = new Raycaster(new Vector3(...seat.seat).add(new Vector3(0, 0.015, 0)), new Vector3(0, -1, 0))
         const hit = ray.intersectObject(model.root, true)[0]

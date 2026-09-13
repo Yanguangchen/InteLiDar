@@ -26,7 +26,7 @@ def test_ask_chairs_highlights_only_existing_chair_ids() -> None:
     ids = {obj.id for obj in twin.objects}
 
     assert set(result.highlight_ids) <= ids
-    assert set(result.highlight_ids) == {"chair-1", "chair-2", "chair-3", "chair-4"}
+    assert set(result.highlight_ids) == {obj.id for obj in twin.objects if obj.type == "chair"}
     assert "chair" in result.reply.lower()
 
 
@@ -37,12 +37,7 @@ def test_ask_door_and_obstacles_use_graph_ids() -> None:
 
     blocked = ask_scene(twin, "What objects could obstruct movement through this room?")
     assert set(blocked.highlight_ids) == {
-        "table-1",
-        "chair-1",
-        "chair-2",
-        "chair-3",
-        "chair-4",
-        "shelf-1",
+        obj.id for obj in twin.objects if obj.category == "furniture" and obj.type != "rug"
     }
 
 
@@ -62,7 +57,7 @@ def test_ask_window_and_equipment_use_graph_ids() -> None:
     assert window.highlight_ids == ["window-1"]
 
     equipment = ask_scene(twin, "Show me all electronic equipment.")
-    assert equipment.highlight_ids == ["monitor-1"]
+    assert equipment.highlight_ids == ["laptop-1", "coffee-machine", "monitor-1"]
 
 
 def test_ask_rejects_blank_questions() -> None:

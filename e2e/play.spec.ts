@@ -51,10 +51,10 @@ test('desktop avatar walks, runs, resets and stops at a wall on the floor', asyn
 
   const beforeRun = await state(page)
   await page.keyboard.down('Shift')
-  await page.keyboard.down('d')
+  await page.keyboard.down('s')
   await expect.poll(async () => (await state(page)).animation).toBe('run')
-  await expect.poll(async () => (await state(page)).position[0] - beforeRun.position[0]).toBeGreaterThan(0.6)
-  await page.keyboard.up('d')
+  await expect.poll(async () => (await state(page)).position[2] - beforeRun.position[2]).toBeGreaterThan(0.6)
+  await page.keyboard.up('s')
   await page.keyboard.up('Shift')
 
   await page.getByRole('button', { name: 'Reset position' }).click()
@@ -64,7 +64,7 @@ test('desktop avatar walks, runs, resets and stops at a wall on the floor', asyn
   await expect.poll(async () => (await state(page)).animation).toBe('idle')
   const blocked = await state(page)
   expect(blocked.grounded).toBe(true)
-  expect(blocked.position[2]).toBeGreaterThanOrEqual(-2.6 + 0.21)
+  expect(blocked.position[2]).toBeGreaterThanOrEqual(-4.8 + 0.21)
   expect(blocked.position[1]).toBeGreaterThan(-0.02)
   expect(blocked.position[1]).toBeLessThan(0.06)
   await page.keyboard.up('w')
@@ -107,11 +107,11 @@ test('furniture edits survive a play session and mouse dragging turns the camera
       graph: { objects: { id: string; position: [number, number, number] }[] }
       project: (point: [number, number, number]) => { x: number; y: number }
     } }).__intelidarScene
-    // This backrest is visible beside the table; the detailed door now occludes chair-1.
+    // Café chairs face across the table; their backrests are east of the seat.
     const chair = scene.graph.objects.find(object => object.id === 'chair-4')!
     return {
       position: chair.position,
-      handle: scene.project([chair.position[0], chair.position[1] + 0.29, chair.position[2] - 0.20]),
+      handle: scene.project([chair.position[0] + 0.20, chair.position[1] + 0.24, chair.position[2]]),
       target: scene.project([chair.position[0] + 0.5, 0, chair.position[2] + 0.3]),
     }
   })

@@ -1,0 +1,1193 @@
+{
+  "source": "demo",
+  "room": {
+    "id": "photo-cafe-8179",
+    "name": "Photo caf\u00e9 lounge",
+    "width": 6.4,
+    "depth": 9.6,
+    "height": 3.4,
+    "units": "m"
+  },
+  "objects": [
+    {
+      "id": "table-1",
+      "type": "table",
+      "label": "Caf\u00e9 table \u00b7 front",
+      "category": "furniture",
+      "position": [
+        -0.65,
+        0.370295,
+        1.15
+      ],
+      "size": [
+        0.76,
+        0.74059,
+        0.76
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "table_cafe"
+    },
+    {
+      "id": "table-2",
+      "type": "table",
+      "label": "Caf\u00e9 table \u00b7 middle",
+      "category": "furniture",
+      "position": [
+        -0.65,
+        0.370295,
+        0.38
+      ],
+      "size": [
+        0.76,
+        0.74059,
+        0.76
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "table_cafe"
+    },
+    {
+      "id": "table-3",
+      "type": "table",
+      "label": "Caf\u00e9 table \u00b7 rear",
+      "category": "furniture",
+      "position": [
+        -0.65,
+        0.370295,
+        -0.39
+      ],
+      "size": [
+        0.76,
+        0.74059,
+        0.76
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "table_cafe"
+    },
+    {
+      "id": "chair-1",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        -1.37,
+        0.408825,
+        1.15
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "chair-2",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        0.36,
+        0.408825,
+        1.15
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "chair-3",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        -1.37,
+        0.408825,
+        0.38
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "chair-4",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        0.36,
+        0.408825,
+        0.38
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "chair-5",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        -1.37,
+        0.408825,
+        -0.39
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "chair-6",
+      "type": "chair",
+      "label": "Chair \u00b7 communal table",
+      "category": "furniture",
+      "position": [
+        0.36,
+        0.408825,
+        -0.39
+      ],
+      "size": [
+        0.48,
+        0.81765,
+        0.48268
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "chair_cafe"
+    },
+    {
+      "id": "left-table-0",
+      "type": "table",
+      "label": "Caf\u00e9 table \u00b7 banquette",
+      "category": "furniture",
+      "position": [
+        -2.12,
+        0.375,
+        0.9
+      ],
+      "size": [
+        0.7,
+        0.75,
+        0.7
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "table_cafe"
+    },
+    {
+      "id": "office-chair-0",
+      "type": "chair",
+      "label": "Office chair",
+      "category": "furniture",
+      "position": [
+        -1.95,
+        0.485,
+        1.57
+      ],
+      "size": [
+        0.645,
+        0.97,
+        0.5851
+      ],
+      "rotation": [
+        0,
+        3.141592653589793,
+        0
+      ],
+      "assetId": "chair_office",
+      "color": "#24272b"
+    },
+    {
+      "id": "banquette-0",
+      "type": "sofa",
+      "label": "Dark upholstered banquette",
+      "category": "furniture",
+      "position": [
+        -2.78,
+        0.47,
+        0.9
+      ],
+      "size": [
+        1.8,
+        0.94,
+        0.72
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "sofa_3seat",
+      "color": "#30353b"
+    },
+    {
+      "id": "left-table-1",
+      "type": "table",
+      "label": "Caf\u00e9 table \u00b7 banquette",
+      "category": "furniture",
+      "position": [
+        -2.12,
+        0.375,
+        -1.05
+      ],
+      "size": [
+        0.7,
+        0.75,
+        0.7
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "table_cafe"
+    },
+    {
+      "id": "office-chair-1",
+      "type": "chair",
+      "label": "Office chair",
+      "category": "furniture",
+      "position": [
+        -1.95,
+        0.485,
+        -0.38
+      ],
+      "size": [
+        0.645,
+        0.97,
+        0.5851
+      ],
+      "rotation": [
+        0,
+        3.141592653589793,
+        0
+      ],
+      "assetId": "chair_office",
+      "color": "#24272b"
+    },
+    {
+      "id": "banquette-1",
+      "type": "sofa",
+      "label": "Dark upholstered banquette",
+      "category": "furniture",
+      "position": [
+        -2.78,
+        0.47,
+        -1.05
+      ],
+      "size": [
+        1.8,
+        0.94,
+        0.72
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "sofa_3seat",
+      "color": "#30353b"
+    },
+    {
+      "id": "laptop-1",
+      "type": "laptop",
+      "label": "Laptop",
+      "category": "equipment",
+      "position": [
+        -2.12,
+        0.86446,
+        -1.05
+      ],
+      "size": [
+        0.34,
+        0.22892,
+        0.26225
+      ],
+      "rotation": [
+        0,
+        3.141592653589793,
+        0
+      ],
+      "assetId": "laptop"
+    },
+    {
+      "id": "bar-counter",
+      "type": "counter",
+      "label": "Stone caf\u00e9 bar",
+      "category": "furniture",
+      "position": [
+        -1.03,
+        0.5625,
+        -3.02
+      ],
+      "size": [
+        3.34,
+        1.125,
+        0.78
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "counter_cafe"
+    },
+    {
+      "id": "bar-stool-0",
+      "type": "chair",
+      "label": "Red bar stool",
+      "category": "furniture",
+      "position": [
+        -2.05,
+        0.4,
+        -2.32
+      ],
+      "size": [
+        0.46,
+        0.8,
+        0.46
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "stool_bar"
+    },
+    {
+      "id": "bar-stool-1",
+      "type": "chair",
+      "label": "White bar stool",
+      "category": "furniture",
+      "position": [
+        -1.1,
+        0.4,
+        -2.32
+      ],
+      "size": [
+        0.46,
+        0.8,
+        0.46
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "stool_bar",
+      "color": "#eeeee6"
+    },
+    {
+      "id": "bar-stool-2",
+      "type": "chair",
+      "label": "Red bar stool",
+      "category": "furniture",
+      "position": [
+        -0.15,
+        0.4,
+        -2.32
+      ],
+      "size": [
+        0.46,
+        0.8,
+        0.46
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "stool_bar"
+    },
+    {
+      "id": "back-cabinet-0",
+      "type": "shelf",
+      "label": "Tall dark bar cabinet",
+      "category": "furniture",
+      "position": [
+        -2.35,
+        1.025,
+        -4.45
+      ],
+      "size": [
+        0.98,
+        2.05,
+        0.62
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "cabinet_simple",
+      "color": "#282624"
+    },
+    {
+      "id": "back-cabinet-1",
+      "type": "shelf",
+      "label": "Bar storage cabinet",
+      "category": "furniture",
+      "position": [
+        -1.4,
+        0.45,
+        -4.45
+      ],
+      "size": [
+        0.94,
+        0.9,
+        0.463
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "cabinet_simple",
+      "color": "#282624"
+    },
+    {
+      "id": "back-cabinet-2",
+      "type": "shelf",
+      "label": "Bar storage cabinet",
+      "category": "furniture",
+      "position": [
+        -0.45,
+        0.45,
+        -4.45
+      ],
+      "size": [
+        0.94,
+        0.9,
+        0.463
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "cabinet_simple",
+      "color": "#282624"
+    },
+    {
+      "id": "coffee-machine",
+      "type": "coffee",
+      "label": "Espresso machine",
+      "category": "equipment",
+      "position": [
+        -0.42,
+        1.32125,
+        -3.03
+      ],
+      "size": [
+        0.58,
+        0.3925,
+        0.545
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "coffee_machine"
+    },
+    {
+      "id": "monitor-1",
+      "type": "monitor",
+      "label": "Checkout display",
+      "category": "equipment",
+      "position": [
+        -1.12,
+        1.2735,
+        -3.12
+      ],
+      "size": [
+        0.36,
+        0.297,
+        0.124
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "monitor_desktop"
+    },
+    {
+      "id": "bar-bin",
+      "type": "trash",
+      "label": "Waste bin",
+      "category": "furniture",
+      "position": [
+        0.73,
+        0.16,
+        -3.3
+      ],
+      "size": [
+        0.28,
+        0.32,
+        0.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "trash_bin"
+    },
+    {
+      "id": "bar-plant",
+      "type": "plant",
+      "label": "Counter plant",
+      "category": "furniture",
+      "position": [
+        0.34,
+        1.32575,
+        -3.09
+      ],
+      "size": [
+        0.21,
+        0.4015,
+        0.21
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "plant_potted_small"
+    },
+    {
+      "id": "bar-chess-0",
+      "type": "chess",
+      "label": "Counter chess piece",
+      "category": "furniture",
+      "position": [
+        -2.2,
+        1.1658,
+        -2.98
+      ],
+      "size": [
+        0.045,
+        0.0816,
+        0.045
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "chess_king"
+    },
+    {
+      "id": "bar-chess-1",
+      "type": "chess",
+      "label": "Counter chess piece",
+      "category": "furniture",
+      "position": [
+        -2.02,
+        1.1639,
+        -2.98
+      ],
+      "size": [
+        0.045,
+        0.0778,
+        0.045
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "chess_pawn"
+    },
+    {
+      "id": "bar-chess-2",
+      "type": "chess",
+      "label": "Counter chess piece",
+      "category": "furniture",
+      "position": [
+        -1.87,
+        1.1639,
+        -2.98
+      ],
+      "size": [
+        0.045,
+        0.0778,
+        0.045
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "chess_pawn"
+    },
+    {
+      "id": "shelf-1",
+      "type": "shelf",
+      "label": "Black display shelf",
+      "category": "furniture",
+      "position": [
+        2.94,
+        1.075,
+        1.9
+      ],
+      "size": [
+        1.06,
+        2.15,
+        0.42
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "shelf_open",
+      "color": "#202224"
+    },
+    {
+      "id": "display-books-0",
+      "type": "books",
+      "label": "Display books",
+      "category": "furniture",
+      "position": [
+        2.92,
+        0.8230833333333333,
+        1.7
+      ],
+      "size": [
+        0.344,
+        0.177,
+        0.23
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "books_stack"
+    },
+    {
+      "id": "display-shelf-1",
+      "type": "shelf",
+      "label": "Black display shelf",
+      "category": "furniture",
+      "position": [
+        2.94,
+        1.075,
+        0.8
+      ],
+      "size": [
+        1.06,
+        2.15,
+        0.42
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "shelf_open",
+      "color": "#202224"
+    },
+    {
+      "id": "display-books-1",
+      "type": "books",
+      "label": "Display books",
+      "category": "furniture",
+      "position": [
+        2.92,
+        0.8230833333333333,
+        0.6000000000000001
+      ],
+      "size": [
+        0.344,
+        0.177,
+        0.23
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "books_stack"
+    },
+    {
+      "id": "display-shelf-2",
+      "type": "shelf",
+      "label": "Black display shelf",
+      "category": "furniture",
+      "position": [
+        2.94,
+        1.075,
+        -0.3
+      ],
+      "size": [
+        1.06,
+        2.15,
+        0.42
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "shelf_open",
+      "color": "#202224"
+    },
+    {
+      "id": "display-books-2",
+      "type": "books",
+      "label": "Display books",
+      "category": "furniture",
+      "position": [
+        2.92,
+        0.8230833333333333,
+        -0.5
+      ],
+      "size": [
+        0.344,
+        0.177,
+        0.23
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "books_stack"
+    },
+    {
+      "id": "display-bookshelf",
+      "type": "shelf",
+      "label": "Bookshelf",
+      "category": "furniture",
+      "position": [
+        2.94,
+        1.075,
+        2.98
+      ],
+      "size": [
+        1.06,
+        2.15,
+        0.42
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "assetId": "bookshelf",
+      "color": "#252628"
+    },
+    {
+      "id": "chess-king-1",
+      "type": "chess",
+      "label": "Ivory chess king",
+      "category": "furniture",
+      "position": [
+        2.93,
+        1.5069999999999997,
+        1.62
+      ],
+      "size": [
+        0.18,
+        0.3265,
+        0.18
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "chess_king"
+    },
+    {
+      "id": "chess-pawn-1",
+      "type": "chess",
+      "label": "Black chess pawn",
+      "category": "furniture",
+      "position": [
+        2.93,
+        1.4992499999999997,
+        2.13
+      ],
+      "size": [
+        0.18,
+        0.311,
+        0.18
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "chess_pawn"
+    },
+    {
+      "id": "display-pot",
+      "type": "pot",
+      "label": "Display vase",
+      "category": "furniture",
+      "position": [
+        2.92,
+        2.220083333333333,
+        0.57
+      ],
+      "size": [
+        0.22,
+        0.176,
+        0.22
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "pot_empty"
+    },
+    {
+      "id": "display-plant",
+      "type": "plant",
+      "label": "Shelf plant",
+      "category": "furniture",
+      "position": [
+        2.92,
+        1.5444999999999998,
+        -0.48
+      ],
+      "size": [
+        0.21,
+        0.4015,
+        0.21
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "plant_potted_small"
+    },
+    {
+      "id": "plant-right",
+      "type": "plant",
+      "label": "Tall plant \u00b7 display corner",
+      "category": "furniture",
+      "position": [
+        2.71,
+        0.87,
+        -1.48
+      ],
+      "size": [
+        0.85171,
+        1.74,
+        0.75298
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "plant_indoor_tall"
+    },
+    {
+      "id": "plant-back",
+      "type": "plant",
+      "label": "Plant \u00b7 rear doorway",
+      "category": "furniture",
+      "position": [
+        0.71,
+        0.69,
+        -3.9
+      ],
+      "size": [
+        0.6,
+        1.38,
+        0.544
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "plant_potted_medium"
+    },
+    {
+      "id": "plant-front",
+      "type": "plant",
+      "label": "Tall plant \u00b7 entrance",
+      "category": "furniture",
+      "position": [
+        -2.75,
+        0.87,
+        4.19
+      ],
+      "size": [
+        0.85171,
+        1.74,
+        0.75298
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "plant_indoor_tall"
+    },
+    {
+      "id": "pendant-0",
+      "type": "pendant",
+      "label": "Silver pendant",
+      "category": "structure",
+      "position": [
+        -2.25,
+        2.61475,
+        1.05
+      ],
+      "size": [
+        0.5,
+        0.9895,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "pendant_cafe"
+    },
+    {
+      "id": "pendant-1",
+      "type": "pendant",
+      "label": "Silver pendant",
+      "category": "structure",
+      "position": [
+        -2.25,
+        2.61475,
+        -0.85
+      ],
+      "size": [
+        0.5,
+        0.9895,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "pendant_cafe"
+    },
+    {
+      "id": "pendant-2",
+      "type": "pendant",
+      "label": "Silver pendant",
+      "category": "structure",
+      "position": [
+        -2.25,
+        2.61475,
+        -2.4
+      ],
+      "size": [
+        0.5,
+        0.9895,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "pendant_cafe"
+    },
+    {
+      "id": "track-0",
+      "type": "lighting",
+      "label": "Ceiling spotlights",
+      "category": "structure",
+      "position": [
+        -2.38,
+        3.3087500000000003,
+        -0.35
+      ],
+      "size": [
+        0.14381,
+        0.1775,
+        5.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "track_ceiling"
+    },
+    {
+      "id": "track-1",
+      "type": "lighting",
+      "label": "Ceiling spotlights",
+      "category": "structure",
+      "position": [
+        1.82,
+        3.3087500000000003,
+        -0.35
+      ],
+      "size": [
+        0.14381,
+        0.1775,
+        5.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "track_ceiling"
+    },
+    {
+      "id": "mountain-art",
+      "type": "art",
+      "label": "Framed mountain artwork",
+      "category": "structure",
+      "position": [
+        -3.16,
+        1.8399999999999999,
+        -0.04
+      ],
+      "size": [
+        1.9,
+        0.72,
+        0.0515
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "assetId": "mountain_art"
+    },
+    {
+      "id": "oak-floor",
+      "type": "floor",
+      "label": "Pale oak floor",
+      "category": "structure",
+      "position": [
+        0,
+        0.0044,
+        0
+      ],
+      "size": [
+        6.398,
+        0.0088,
+        9.597
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "assetId": "floor_oak_cafe"
+    },
+    {
+      "id": "door-1",
+      "type": "door",
+      "label": "Rear access door",
+      "category": "opening",
+      "position": [
+        1.57,
+        1.09,
+        -4.75
+      ],
+      "size": [
+        0.98,
+        2.18,
+        0.08
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "material": "wood",
+      "color": "#d6d3c8"
+    },
+    {
+      "id": "window-1",
+      "type": "window",
+      "label": "Right wall glazing",
+      "category": "opening",
+      "position": [
+        3.17,
+        1.93,
+        0.2
+      ],
+      "size": [
+        6.4,
+        2.3,
+        0.045
+      ],
+      "rotation": [
+        0,
+        -1.5707963267948966,
+        0
+      ],
+      "material": "glass",
+      "color": "#9c9384"
+    }
+  ]
+}

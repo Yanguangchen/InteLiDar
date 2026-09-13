@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import cafe from '../../backend/app/cafe_scene.json'
+import type { SceneGraph } from '../scene/types'
 import { sampleGraph } from '../test/sampleGraph'
 import { demoEnvironment } from './demoEnvironment'
 import { Box3, Ray, Vector3 } from 'three'
 
 describe('demoEnvironment', () => {
+  it('starts the photo café in the aisle with the bar ahead and space behind the camera', () => {
+    const environment = demoEnvironment(cafe as SceneGraph)
+    expect(environment.spawn[0]).toBeGreaterThan(1)
+    expect(environment.spawn[0]).toBeLessThan(2)
+    expect(environment.spawn[2]).toBeGreaterThan(.5)
+    expect(environment.spawn[2] + 3).toBeLessThan(cafe.room.depth / 2)
+  })
   it('puts the floor surface at zero, contains the room, and preserves furniture poses', () => {
     const graph = structuredClone(sampleGraph)
     graph.objects[0].rotation = [0, Math.PI / 4, 0]
