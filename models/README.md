@@ -57,7 +57,11 @@ In the Blender source, NLA tracks occupy idle frames 1–91, walk 121–157, and
 
 ## Three.js placement
 
-The reconstructed demo now loads the chair, table, shelf, and monitor through the [asset catalog](../src/assets/catalog.ts); desktop Play uses `avatar_casual`. Vite bundles those GLB URLs for development and production. Other library assets remain available for future placement. Paths in [manifest.json](manifest.json) are relative to `models/`. See [desktop rooms](../docs/playable-rooms.md) for controls and import setup.
+Standard demo shapes use the bundled GLBs. Alternate shapes from Appearance use procedural geometry; placed renovation assets retain their catalog models. Color and finish edits apply to the selected model, and gameplay uses the edited graph's dimensions and rotations for collision bounds.
+
+The reconstructed demo now loads the chair, table, shelf, and monitor through the [asset catalog](../src/assets/catalog.ts); desktop Play uses `avatar_casual`. Vite bundles those GLB URLs for development and production. Paths in [manifest.json](manifest.json) are relative to `models/`. See [desktop rooms](../docs/playable-rooms.md) for controls and import setup.
+
+The viewer's **Renovate** library loads 26 furniture, plant, and electronics GLBs from this directory using [manifest.json](manifest.json). Vite bundles their URLs automatically; no manual copying is required. The structural door and skinned avatars are excluded from the renovation catalog. Paths in the manifest are relative to `models/`. See the [renovation guide](../docs/renovation.md).
 
 ```js
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';

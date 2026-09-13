@@ -109,7 +109,7 @@ The rule for anything added here: it must cost frames and carry no meaning. The 
 
 [src/components/Hud.tsx](../src/components/Hud.tsx)
 
-- **Top bar** — brand with a sweeping LiDAR mark, Edit toggle, status pill (`LiDAR capture` / `Raw mesh` / `Analysing scene` / `Semantic twin`), and the Graphics menu. The menu is last in the row so its popover cannot overhang a narrow viewport, and it stays live in every mode, including mid-sweep, which is when someone notices the lag.
+- **Top bar** — brand with a sweeping LiDAR mark, Edit toggle, status pill (`Demo playback` / `Raw mesh` / `Analysing scene` / `Semantic twin`), and the Graphics menu. The menu is last in the row so its popover cannot overhang a narrow viewport, and it stays live in every mode, including mid-sweep, which is when someone notices the lag.
 - **Left panel** — room name, size, object count, source line, object list. During the sweep, undetected objects are held open as `.ghost` placeholders so the list never jumps.
 - **Object rows** — buttons. Clicking one highlights that object in the canvas; rows carry `aria-pressed` and light up for ask results too.
 - **Centre stage** — capture readout while sweeping, Reconstruct CTA once swept, the analysis `<ol>` in `analysing`, nothing in `twin`
@@ -133,7 +133,8 @@ Outfit + IBM Plex Mono (loaded in `index.html`), accent `#3ee0c2`. Panels enter 
 - `OrbitControls`: damping, polar limit, distance 3–16, target `[0, 1, 0]`. Disabled while `dragging`, auto-rotating slowly while sweeping.
 - `RoomShell` renders **two** shells in the same place: the measured wireframe and the surfaced twin. The sweep fades the first in; the twin transition cross-fades to the second, then drops `transparent` so shadows stay crisp.
 - The twin ceiling faces inward only, so a camera above the room looks straight in instead of through a lid.
-- Each graph object renders a wireframe box, a solid box, and its own return cloud, cross-faded by `revealAmount`. Twin uses `object.color`, glass (`material === 'glass'`) and metal roughness/metalness.
+- Each graph object renders a wireframe box and return cloud, then a detailed model cross-faded by `revealAmount`. `buildFurnitureModel.ts` builds tables, chairs, shelves, monitors, doors, and windows within the measured bounding volume, with rounded edges and individual construction details. Unknown types retain a box fallback. Object rotation applies to the full group.
+- `modelMaterials.ts` generates seamless neutral texture and bump maps for wood, fabric, leather, brushed metal, plastic, and stone. Primary surfaces use `object.color` independently of finish. Hardware retains its own finish; window glass has separate tint and transparency. Geometry and textures are disposed when models are replaced, and moving an object does not rebuild them.
 - Highlights set a pulsing teal emissive and a `.label-hot` HTML caption. Labels fade in on the object's own materialise delay.
 - Fallback room if `graph` is null: same dimensions as the demo fixture, so the shell still renders while ingest is in flight.
 
@@ -142,6 +143,8 @@ Outfit + IBM Plex Mono (loaded in `index.html`), accent `#3ee0c2`. Panels enter 
 Highlighted objects use a strong pulsing teal emissive. Draggable objects in edit mode use a weaker steady one, so they read as movable without looking like ask results.
 
 ## Edit interaction
+
+In twin mode, **Appearance** provides an object selector (also available on narrow screens), type-specific shapes, material choices, a custom color picker, and preset swatches. `updateAppearance` accepts valid changes to one object, preserving ids, position, and dimensions. Edits remain in the current graph and are sent to the spatial assistant; they are not saved across a page reload. Drag bounds account for rotation.
 
 1. User toggles Edit (`mode !== 'analysing'`, sweep finished, graph loaded).
 2. Hover on a draggable mesh → `grab`. Pointer down → `dragging = true`, orbit off, `grabbing`.

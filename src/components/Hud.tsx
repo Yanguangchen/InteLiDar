@@ -3,6 +3,7 @@ import type { AnalysisStep, SceneGraph, SceneMode, SceneObject } from '../scene/
 import { capturedPoints, revealedObjects } from '../scene/scanReveal'
 import type { GraphicsSettings } from '../settings/graphics'
 import { GraphicsMenu } from './GraphicsMenu'
+import { CaptureImport } from './CaptureImport'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
@@ -26,6 +27,9 @@ type HudProps = {
   onSkipScan: () => void
   onSelectObject: (id: string) => void
   onSettingsChange: (settings: GraphicsSettings) => void
+  onImportCapture?: (graph: SceneGraph) => void
+  renovating?: boolean
+  onToggleRenovation?: () => void
 }
 
 const SUGGESTIONS = [
@@ -55,6 +59,9 @@ export function Hud({
   onSkipScan,
   onSelectObject,
   onSettingsChange,
+  onImportCapture,
+  renovating,
+  onToggleRenovation,
 }: HudProps) {
   const specular = useSpecular()
   const reconstructed = mode === 'twin'
@@ -73,11 +80,13 @@ export function Hud({
           <span className={`mark ${scanning ? 'sweeping' : ''}`} aria-hidden="true" />
           <div>
             <p className="name">InteLiDar</p>
-            <p className="tag">Scan reality. AI understands it.</p>
+            <p className="tag">{graph?.source === 'roomplan' ? 'iPhone LiDAR · RoomPlan' : 'Scan reality. AI understands it.'}</p>
           </div>
         </div>
         <div className="topbar-actions">
           {experienceActions}
+          {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
+          {onToggleRenovation && <button type="button" className={`chip ${renovating ? 'on' : ''}`} aria-pressed={Boolean(renovating)} disabled={!reconstructed} onClick={onToggleRenovation}>Renovate</button>}
           <button
             type="button"
             className={`chip edit-toggle ${editing ? 'on' : ''}`}
@@ -92,7 +101,7 @@ export function Hud({
             aria-live="polite"
           >
             <span className="status-dot" />
-            {scanning && 'LiDAR capture'}
+            {scanning && 'Demo playback'}
             {!scanning && mode === 'raw' && 'Raw mesh'}
             {mode === 'analysing' && 'Analysing scene'}
             {mode === 'twin' && 'Semantic twin'}
@@ -118,7 +127,7 @@ export function Hud({
           </div>
           <div>
             <dt>Source</dt>
-            <dd>LiDAR demo mesh</dd>
+            <dd>{graph?.source === 'roomplan' ? 'iPhone LiDAR · RoomPlan' : 'Demo · no scanner connected'}</dd>
           </div>
         </dl>
 
@@ -263,13 +272,13 @@ function CaptureReadout({
   return (
     <div className="capture glass" {...specular}>
       <div className="capture-head">
-        <p className="panel-kicker">Sensor</p>
+        <p className="panel-kicker">Demo scan · no device connected</p>
         <p className="capture-percent">{percent}%</p>
       </div>
       <div
         className="capture-track"
         role="progressbar"
-        aria-label="LiDAR capture progress"
+          aria-label="Demo playback progress"
         aria-valuenow={percent}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -280,7 +289,7 @@ function CaptureReadout({
       </div>
       <div className="capture-foot">
         <p>
-          <strong>{capturedPoints(progress).toLocaleString('en-US')}</strong> returns ·{' '}
+          <strong>{capturedPoints(progress).toLocaleString('en-US')}</strong> simulated returns ·{' '}
           <strong>{detected}</strong> volumes found
         </p>
         <button type="button" className="skip" onClick={onSkip}>

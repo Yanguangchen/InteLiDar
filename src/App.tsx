@@ -12,7 +12,10 @@ import type { PlayerTelemetry } from './player/PlayerWorld'
 import { demoEnvironment } from './room/demoEnvironment'
 import { normalizeRoom } from './room/importRoom'
 import type { NormalizedRoom } from './room/types'
-import { moveObject } from './scene/editScene'
+import { AppearanceEditor } from './components/AppearanceEditor'
+import { RenovationPanel } from './components/RenovationPanel'
+import { addFurniture, removeFurniture, rotateFurniture, undoRenovation, type RenovationResult, type RenovationUndo } from './scene/renovation'
+import { moveObject, updateAppearance } from './scene/editScene'
 import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
 import { SCAN_DURATION_MS } from './scene/scanReveal'
@@ -66,6 +69,11 @@ export default function App() {
   const [checkingSpawn, setCheckingSpawn] = useState(false)
   const [spawnMessage, setSpawnMessage] = useState<string | null>(null)
   const spawnRequest = useRef(0)
+  const [renovating, setRenovating] = useState(false)
+  const [renovationHistory, setRenovationHistory] = useState<RenovationUndo[]>([])
+  const [renovationMessage, setRenovationMessage] = useState<string | null>(null)
+  const imported = useRef(false)
+  const sceneVersion = useRef(0)
 
   const [settings, setSettings] = useGraphics()
 
@@ -73,11 +81,12 @@ export default function App() {
   const environment = useMemo(() => rooms.current?.environment ?? (displayGraph ? demoEnvironment(displayGraph) : null), [rooms.current, displayGraph])
   const importedView = rooms.candidate ?? rooms.current?.loaded ?? null
   const roomName = rooms.current?.loaded.name ?? displayGraph?.room.name ?? 'Meeting room'
+  const importedCapture = displayGraph?.source === 'roomplan'
   // The sweep only starts once there is geometry for the sensor to find, and a
   // duration of 0 hands over a finished scan when animation is switched off.
   const { progress: scanProgress, skip: skipScan } = useScanProgress(
     graph !== null,
-    settings.motion ? SCAN_DURATION_MS : 0,
+    settings.motion && !importedCapture ? SCAN_DURATION_MS : 0,
   )
   const scanning = mode === 'raw' && graph !== null && scanProgress < 1
 
@@ -85,12 +94,12 @@ export default function App() {
     let cancelled = false
     ingestScene()
       .then((scene) => {
-        if (cancelled) return
+        if (cancelled || imported.current) return
         setGraph(scene)
         setError(null)
       })
       .catch(() => {
-        if (cancelled) return
+        if (cancelled || imported.current) return
         setError('Backend unavailable. Start the API on port 8000.')
       })
     return () => { cancelled = true }
@@ -125,6 +134,7 @@ export default function App() {
     setEditing(false)
     setDragging(false)
     setPlayError(null)
+    setRenovating(false)
     play.start()
   }
 
@@ -133,6 +143,7 @@ export default function App() {
     setPlayError(null)
     setEditing(false)
     setDragging(false)
+    setRenovating(false)
     void rooms.load(file)
   }
 
@@ -173,17 +184,19 @@ export default function App() {
     if (mode !== 'analysing' || analysisSteps.length === 0) return
 
     setVisibleStepCount(0)
+    let completionTimer: number | undefined
     const timers = analysisSteps.map((_, index) =>
       window.setTimeout(() => {
         setVisibleStepCount(index + 1)
         if (index === analysisSteps.length - 1) {
-          timers.push(window.setTimeout(() => setMode('twin'), 700))
+          completionTimer = window.setTimeout(() => setMode('twin'), 700)
         }
       }, 380 * (index + 1)),
     )
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer))
+      window.clearTimeout(completionTimer)
     }
   }, [mode, analysisSteps])
 
@@ -209,29 +222,81 @@ export default function App() {
     )
   }
 
+  function onImportCapture(scene: SceneGraph) {
+    play.exit()
+    setPlayError(null)
+    sceneVersion.current += 1
+    imported.current = true
+    setGraph(scene)
+    setTwinGraph(scene)
+    setMode('twin')
+    setAnalysisSteps([])
+    setReply(null)
+    setQuery('')
+    setHighlightedIds([])
+    setEditing(false)
+    setRenovating(false)
+    setRenovationHistory([])
+    setRenovationMessage(null)
+    setDragging(false)
+    setError(null)
+    skipScan()
+  }
+
+  function applyRenovation(change: () => RenovationResult) {
+    try {
+      const result = change()
+      sceneVersion.current += 1
+      setTwinGraph(result.graph)
+      setRenovationHistory((history) => [...history, result.undo].slice(-30))
+      setHighlightedIds(result.selectedId ? [result.selectedId] : [])
+      setReply(null)
+      setDragging(false)
+      setRenovationMessage(result.undo.kind === 'add' ? 'Furniture added. Drag it to adjust its position.' : 'Furniture removed. Undo is available.')
+    } catch (cause) { setRenovationMessage(cause instanceof Error ? cause.message : 'Could not update this layout.') }
+  }
+
+  function onUndoRenovation() {
+    const action = renovationHistory.at(-1)
+    if (!twinGraph || !action) return
+    sceneVersion.current += 1
+    setTwinGraph(undoRenovation(twinGraph, action))
+    setRenovationHistory((history) => history.slice(0, -1))
+    setHighlightedIds(action.kind === 'remove' ? [action.object.id] : [])
+    setDragging(false)
+    setReply(null)
+    setRenovationMessage('Last renovation undone.')
+  }
+
   async function onReconstruct() {
     if (!graph) return
+    const version = sceneVersion.current
     setError(null)
     try {
       const result = await reconstructScene(graph)
+      if (version !== sceneVersion.current) return
       setTwinGraph(result.graph)
       setAnalysisSteps(result.analysisSteps)
       setMode('analysing')
     } catch {
+      if (version !== sceneVersion.current) return
       setError('Reconstruct failed. Is the backend running?')
     }
   }
 
   async function ask(question: string) {
+    const version = sceneVersion.current
     const scene = twinGraph
     if (mode !== 'twin' || !scene || question.trim().length === 0) return
     setQuery(question)
     try {
       const result = await askScene(scene, question)
+      if (version !== sceneVersion.current) return
       setReply(result.reply)
       setHighlightedIds(result.highlightIds)
       setError(null)
     } catch {
+      if (version !== sceneVersion.current) return
       setError('Ask failed. Is the backend running?')
     }
   }
@@ -248,6 +313,7 @@ export default function App() {
       data-motion={settings.motion ? 'on' : 'off'}
       data-experience={play.active ? 'play' : rooms.candidate ? 'setup' : 'inspect'}
       data-room-source={importedView ? 'glb' : 'demo'}
+      data-source={displayGraph?.source ?? 'demo'}
     >
       <Canvas
         shadows="percentage"
@@ -266,15 +332,17 @@ export default function App() {
           onPick={point => { void pickFloor(point) }}
           settings={settings}
         /> : <ViewerScene
+          key={displayGraph?.room.id ?? 'empty'}
           mode={mode}
           graph={displayGraph}
-          scanProgress={scanProgress}
+          scanProgress={importedCapture ? 1 : scanProgress}
           settings={settings}
           highlightedIds={highlightedIds}
           editing={editing}
           dragging={dragging}
           onDraggingChange={setDragging}
           onMoveObject={onMoveObject}
+          onSelectObject={(id) => setHighlightedIds([id])}
           gameplayActive={play.active}
           onAssetsReady={setAssetsReady}
         />}
@@ -314,7 +382,7 @@ export default function App() {
         highlightedIds={highlightedIds}
         analysisSteps={analysisSteps}
         visibleStepCount={visibleStepCount}
-        onToggleEdit={() => setEditing((current) => !current)}
+        onToggleEdit={() => { setEditing((current) => renovating ? true : !current); setRenovating(false) }}
         onQueryChange={setQuery}
         onAsk={handleAsk}
         onAskSuggestion={(value) => {
@@ -326,7 +394,23 @@ export default function App() {
         onSkipScan={skipScan}
         onSelectObject={onSelectObject}
         onSettingsChange={setSettings}
+        onImportCapture={onImportCapture}
+        renovating={renovating}
+        onToggleRenovation={() => { setRenovating((current) => !current); setEditing(true) }}
       />}
+      {!play.active && !importedView && editing && !renovating && mode === 'twin' && twinGraph && (
+        <AppearanceEditor graph={twinGraph} selectedIds={highlightedIds} onSelect={onSelectObject}
+          onChange={(id, patch) => setTwinGraph((current) => current ? updateAppearance(current, id, patch) : current)} />
+      )}
+      {!play.active && !importedView && renovating && mode === 'twin' && twinGraph && <RenovationPanel graph={twinGraph} selectedIds={highlightedIds}
+        canUndo={renovationHistory.length > 0} message={renovationMessage} onSelect={(id) => setHighlightedIds([id])}
+        onAdd={(assetId, height) => applyRenovation(() => addFurniture(twinGraph, assetId, `renovation:${crypto.getRandomValues(new Uint32Array(4)).join('-')}`, height))}
+        onRemove={(id) => applyRenovation(() => removeFurniture(twinGraph, id))} onUndo={onUndoRenovation}
+        onRotate={(id) => {
+          try { setTwinGraph(rotateFurniture(twinGraph, id)); setRenovationMessage('Furniture rotated. Drag it to adjust its position.') }
+          catch (cause) { setRenovationMessage(cause instanceof Error ? cause.message : 'Could not rotate furniture.') }
+        }}
+        onAppearance={() => setRenovating(false)} />}
       {rooms.loading && <div className="import-loading glass" role="status">
         <span>Reading room geometry…</span><button className="chip" type="button" onClick={rooms.cancel}>Cancel loading</button>
       </div>}

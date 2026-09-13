@@ -107,10 +107,11 @@ test('furniture edits survive a play session and mouse dragging turns the camera
       graph: { objects: { id: string; position: [number, number, number] }[] }
       project: (point: [number, number, number]) => { x: number; y: number }
     } }).__intelidarScene
-    const chair = scene.graph.objects.find(object => object.id === 'chair-1')!
+    // This backrest is visible beside the table; the detailed door now occludes chair-1.
+    const chair = scene.graph.objects.find(object => object.id === 'chair-4')!
     return {
       position: chair.position,
-      handle: scene.project([chair.position[0], chair.position[1] + 0.29, chair.position[2] + 0.20]),
+      handle: scene.project([chair.position[0], chair.position[1] + 0.29, chair.position[2] - 0.20]),
       target: scene.project([chair.position[0] + 0.5, 0, chair.position[2] + 0.3]),
     }
   })
@@ -120,7 +121,7 @@ test('furniture edits survive a play session and mouse dragging turns the camera
   await page.mouse.up()
   const chairPosition = () => page.evaluate(() => (window as unknown as {
     __intelidarScene: { graph: { objects: { id: string; position: [number, number, number] }[] } }
-  }).__intelidarScene.graph.objects.find(object => object.id === 'chair-1')!.position)
+  }).__intelidarScene.graph.objects.find(object => object.id === 'chair-4')!.position)
   await expect.poll(async () => Math.hypot(...(await chairPosition()).map((value, index) => value - before.position[index]))).toBeGreaterThan(0.15)
   const edited = await chairPosition()
   await enterPlay(page)

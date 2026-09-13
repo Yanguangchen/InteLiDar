@@ -7,6 +7,8 @@ async function chooseFloor(page: Page) {
   // Read-only instrumentation projects a known clear floor point through the
   // live camera; the test still uses the real pointer picking and spawn checks.
   await expect.poll(() => page.evaluate(() => '__intelidarScene' in window)).toBe(true)
+  // Let the unit change's camera fit and OrbitControls target reach the rendered frame.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
   const point = await page.evaluate(() => (window as unknown as {
     __intelidarScene: { project: (point: [number, number, number]) => { x: number; y: number } }
   }).__intelidarScene.project([12, 2, 21]))

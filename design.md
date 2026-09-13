@@ -35,11 +35,11 @@ The app includes a **browser UI over a mock meeting room**, with a FastAPI scene
 | Furniture GLBs and rigged casual avatar | Integrated into the desktop demo |
 | Desktop movement, following camera, collisions | In place |
 | Local static GLB import and floor/unit setup | In place; session only |
-| Real LiDAR / RoomPlan import | Not started |
+| LiDAR iPhone / RoomPlan import | Native source + Safari file import; Xcode/device verification pending |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
 
-Until real capture exists, `POST /scene/ingest` with an empty body returns the demo scan with semantics stripped.
+`POST /scene/ingest` with an empty body returns the demo scan with semantics stripped. The native iPhone app exports a labelled RoomPlan graph for the browser's **Import scan** flow; installation and device validation are documented in [ios/README.md](./ios/README.md).
 
 ## Demo state machine
 
@@ -84,7 +84,7 @@ Desktop gameplay consumes a frontend `RoomEnvironment` (bounds, colliders, and s
 | Reasoner | Structured answers over the graph | Camera controls |
 | Viewer | Render + highlight + HUD + drag | Inventing objects |
 
-Today capture and vision are skipped. Ingest produces a graph. Reconstruct and ask mutate or query that graph. The viewer never invents objects.
+The initial scene skips capture and vision and uses demo ingest. Imported native RoomPlan exports provide measured poses and device labels. Reconstruct and ask operate on the selected graph. Image-based vision is not implemented.
 
 ## Semantic scene graph
 

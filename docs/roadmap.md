@@ -10,7 +10,7 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 
 | Item | In this repo |
 | --- | --- |
-| LiDAR room scan | Demo ingest stands in; RoomPlan not started ([capture.md](./capture.md)) |
+| LiDAR room scan | iPhone RoomPlan capture source + Safari file import implemented; native build and device verification pending ([capture.md](./capture.md)) |
 | Exported 3D mesh | Axis-aligned boxes from the graph |
 | Browser 3D viewer | React Three Fiber |
 | Basic object or surface recognition | Reconstruct (demo ids + size heuristics) |
@@ -31,7 +31,7 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 
 ## Future work
 
-- Real RoomPlan / glTF ingest
+- Verify native RoomPlan capture on an iPhone; add glTF ingest
 - Vision: detection, segmentation, openings from RGB
 - LLM-driven reconstruct (not only ask)
 - Full geometry completion and photorealistic reconstruction

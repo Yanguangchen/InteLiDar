@@ -79,9 +79,9 @@ describe('Hud', () => {
   it('reports sweep progress instead of the reconstruct CTA while capturing', () => {
     renderHud({ scanProgress: 0.02 })
     expect(screen.queryByRole('button', { name: /AI Reconstruct/ })).not.toBeInTheDocument()
-    expect(screen.getByText('LiDAR capture')).toBeInTheDocument()
+    expect(screen.getByText('Demo playback')).toBeInTheDocument()
 
-    const meter = screen.getByRole('progressbar', { name: /lidar capture/i })
+    const meter = screen.getByRole('progressbar', { name: /demo playback/i })
     expect(meter).toHaveAttribute('aria-valuenow', '2')
     expect(meter).toHaveAttribute('aria-valuemax', '100')
   })

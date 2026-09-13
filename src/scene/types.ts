@@ -22,9 +22,13 @@ export type SceneObject = {
   material?: string | null
   confidence?: number | null
   color?: string | null
+  shape?: string | null
+  /** Catalog model id from models/manifest.json; absent on captured/procedural objects. */
+  assetId?: string | null
 }
 
 export type SceneGraph = {
+  source?: 'demo' | 'roomplan'
   room: SceneRoom
   objects: SceneObject[]
 }
