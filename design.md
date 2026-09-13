@@ -37,6 +37,7 @@ The app includes a **browser UI over a mock meeting room**, with a FastAPI scene
 | Local static GLB import and floor/unit setup | In place; session only |
 | LiDAR iPhone / RoomPlan import | Native source + Safari file import; Xcode/device verification pending |
 | Simulated capture (generated office floor) | In place — same file format and validation, `source: simulated` |
+| Export (scan file, schedule, floor plan, glTF) | In place — pure functions of the graph |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
 
@@ -153,6 +154,9 @@ src/
   scene/simulatedCapture.ts # generated office floor, emitted as a capture file
   scene/importCapture.ts    # capture-file validation (roomplan + simulated)
   scene/roomScale.ts        # what a room's size and density cost the viewer
+  scene/exportScene.ts      # scan file, object schedule, floor plan (pure)
+  scene/exportModel.ts      # the graph as self-contained binary glTF
+  scene/download.ts         # hand a file to the user from a click
   scene/types.ts            # scene graph types
 ```
 

@@ -28,6 +28,10 @@ Checked against the live product: ingest → reconstruct → ask → edit/drag.
 | Labelled sources keep their labels; analysis log follows the scene and names openings | `backend/tests/test_reconstruct.py` | Unit |
 | Demo E2E: sweep → skip → reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
 | Simulated E2E: load without a device → reconstruct → ask → renovate, and the saved file re-imports | `e2e/simulated.spec.ts` | Playwright |
+| Export: capture round trip, provenance, CSV quoting, plan escaping/rotation/labelling, filenames | `src/scene/exportScene.test.ts` | Unit |
+| Export model: pose, rotation, extras, shared materials, glTF 2 structure the room importer accepts | `src/scene/exportModel.test.ts` | Unit |
+| Export panel: each format saves under the room name, and a failure reports instead of saving | `src/components/ExportPanel.test.tsx` | Component |
+| Export E2E: all four downloads, a scan file re-imports with its renovation, a model reopens as a room | `e2e/export.spec.ts` | Playwright |
 | Reduced motion skips the sweep end to end | `e2e/demo.spec.ts` | Playwright |
 | Graphics menu drops effects, persists across reload, keeps the demo working | `e2e/demo.spec.ts` | Playwright |
 

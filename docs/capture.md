@@ -40,6 +40,12 @@ The layout is declared rather than randomised, so it looks the same every run, a
 holds it to that: everything inside the shell, nothing interpenetrating, nothing floating, every model in the library, and
 a walkable aisle left open between the desk bank and the meeting zone.
 
+## Getting a room back out
+
+Whatever came in — demo fixture, simulated floor, or device capture — **Export** writes it back out as a scan file, an
+object schedule, a dimensioned floor plan, or a glTF model. An exported scan file re-imports here with its edits, and an
+exported model opens through **Import room**. See [export](./export.md).
+
 ## The initial scene is still a demo
 
 Loading the website requests `POST /scene/ingest {}`. This returns the nine fixture objects from `backend/app/fixtures.py`. No device is discovered, connected, or scanned by that request.

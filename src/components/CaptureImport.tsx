@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { MAX_CAPTURE_BYTES, parseCapture } from '../scene/importCapture'
 import { simulatedCaptureJson } from '../scene/simulatedCapture'
+import { downloadFile } from '../scene/download'
 import type { SceneGraph } from '../scene/types'
 
 export function CaptureImport({ onImport, disabled = false }: { onImport: (graph: SceneGraph) => void; disabled?: boolean }) {
@@ -32,12 +33,7 @@ export function CaptureImport({ onImport, disabled = false }: { onImport: (graph
     }
   }
   function downloadSimulated() {
-    const url = URL.createObjectURL(new Blob([simulatedCaptureJson()], { type: 'application/json' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'simulated-office-floor.intelidar.json'
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadFile('simulated-office-floor.intelidar.json', simulatedCaptureJson(), 'application/json')
   }
   return <>
     <button type="button" className="chip" disabled={disabled} onClick={() => { setError(null); dialog.current?.showModal() }}>Import scan</button>

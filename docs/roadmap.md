@@ -29,6 +29,7 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 | AI-generated textures | Not started |
 | Scene comparison between two scans | Not started |
 | Large, furnished demo scene without a device | Done — simulated 18 × 11.6 m office floor, 106 objects |
+| Export the twin | Done — scan file, object schedule, floor plan, glTF model ([export.md](./export.md)) |
 
 ## Future work
 
