@@ -35,14 +35,15 @@ From the repo root:
 | --- | --- |
 | `npm run dev` | Vite on 5173 |
 | `npm run backend` | Uvicorn on 8000, reload |
-| `npm test` | frontend + backend + E2E |
+| `npm test` | launcher + frontend + backend + E2E |
+| `npm run test:scripts` | Backend launcher tests |
 | `npm run test:frontend` | `vitest run` |
-| `npm run test:backend` | `backend/.venv/bin/python -m pytest` |
-| `npm run test:e2e` | Playwright against the demo path |
+| `npm run test:backend` | Pytest using the platform's backend virtual environment |
+| `npm run test:e2e` | Playwright demo, desktop gameplay, and room import flows |
 | `npm run build` | `tsc --noEmit` + Vite production bundle |
 | `npm run preview` | Serve `dist/` (no API proxy) |
 
-Watch frontend tests: `npx vitest`. Single backend file: `cd backend && .venv/bin/python -m pytest tests/test_ask.py -q`.
+Watch frontend tests: `npx vitest`. Single backend file from the repository root: `npm run test:backend -- tests/test_ask.py -q`. The launcher selects the Windows or macOS/Linux virtual environment automatically; see [Desktop playable rooms](./playable-rooms.md) for Windows setup and controls.
 
 Coverage map: [tests/AUDIT.md](../tests/AUDIT.md).
 
@@ -59,9 +60,17 @@ src/components/Hud.test.tsx      # reconstruct / ask / edit / sweep gating
 src/components/useSpecular.test.ts # glass highlight tracking
 src/components/GraphicsMenu.test.tsx # quality menu behaviour
 src/settings/graphics.test.ts    # presets, defaults, persistence
+src/assets/*.test.ts             # furniture fitting, materials, and loading
+src/player/*.test.ts             # desktop inputs, camera, and real physics
+src/room/*.test.ts               # source adapters, GLB validation, normalization
+src/experience/*.test.ts*        # play/import lifecycle and render preparation
+src/components/ExperienceHud.test.tsx # desktop play and import gating
 src/test/setup.ts                # Testing Library + jest-dom
 src/test/sampleGraph.ts          # shared fixture
 e2e/demo.spec.ts                 # Playwright: sweep → reconstruct → ask chairs → Edit
+e2e/play.spec.ts                 # desktop movement, collisions, pause, edit preservation
+e2e/import.spec.ts               # local GLB setup and gameplay without the API
+scripts/backend.test.mjs         # cross-platform backend launcher
 backend/tests/test_ingest.py
 backend/tests/test_reconstruct.py
 backend/tests/test_ask.py
@@ -83,6 +92,9 @@ Use these instead of reaching through React or OpenAI:
 | `create_app(reasoner=...)` | HTTP without network |
 | `moveObject` / `canDragObject` | Edit rules |
 | `Hud` props | Mode gating without the canvas |
+| `RoomEnvironment` | Meter-scaled room bounds, colliders, and spawn shared by all room sources |
+| `loadRoomFile` / `normalizeRoom` | Local static GLB validation and source-to-world conversion |
+| `createPlayerSession` | Movement and collision checks with a real Rapier world |
 | `ingestScene` / `reconstructScene` / `askScene` | Client paths; stub `fetch` |
 | Playwright `e2e/demo.spec.ts` | Click-path only; not WebGL pixels |
 | `build_reasoner()` | Key detection only; do not call live OpenAI in CI |

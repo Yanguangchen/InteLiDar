@@ -12,9 +12,11 @@ Specifically, none of the following exists in this codebase:
 
 - a device driver, or any serial, USB, Bluetooth, or network device discovery
 - an ARKit / RoomPlan bridge, or an iOS / iPadOS companion app
-- a reader for any point-cloud or mesh format (`.ply`, `.las`, `.e57`, `.usdz`, `.obj`, `.glb`)
-- any camera, depth-frame, or image handling
+- a point-cloud reader or an importer for `.ply`, `.las`, `.e57`, `.usdz`, or `.obj`
+- any camera capture or depth-frame handling
 - a file-upload route of any kind
+
+The browser can now open a saved, self-contained GLB through **Import room**, including its embedded textures. This is local file import with floor/unit setup and desktop gameplay, not device capture or a backend upload. See [playable rooms](./playable-rooms.md).
 
 The backend's only outbound network call is to OpenAI, and only for [ask](./api.md#post-sceneask). Its dependencies are FastAPI, Uvicorn, Pydantic, python-dotenv, OpenAI, and httpx — no sensor or geometry libraries.
 
@@ -110,7 +112,7 @@ There is no path today. The graph cannot express a cloud; it carries boxes only.
 Roughly in the order they will bite:
 
 1. **A rectangular room.** `Room` is one axis-aligned box. Real rooms are not rectangles, and RoomPlan returns arbitrary wall polygons. Anything L-shaped loses its shape on the way in.
-2. **Rotation is stored but not drawn.** The viewer builds axis-aligned boxes and ignores `rotation` ([scene-graph.md](./scene-graph.md#object)). Real furniture is rarely axis-aligned, so a real scan renders visibly wrong until the viewer applies it.
+2. **Semantic capture still needs normalization.** The demo viewer now applies object rotation, including asset placement, scan sampling, and drag bounds. Device transforms still need conversion into the graph's meter-scaled, Y-up convention ([scene-graph.md](./scene-graph.md#object)).
 3. **Id collision with the fixture.** Reconstruct restores demo semantics by id lookup ([reconstruct.py](../backend/app/services/reconstruct.py)). A real scan that happens to send `table-1` inherits the demo's conference table. Namespace real ids.
 4. **`source` is ignored.** Provenance needs to reach the graph so the HUD can stop saying *LiDAR demo mesh* when the data is real. Additive field on `SceneGraph`, then thread it to the panel.
 5. **No geometry validation.** Objects outside the room, zero or negative sizes, and NaNs are all accepted.

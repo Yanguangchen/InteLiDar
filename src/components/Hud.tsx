@@ -6,6 +6,7 @@ import { GraphicsMenu } from './GraphicsMenu'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
+  experienceActions?: ReactNode
   mode: SceneMode
   graph: SceneGraph | null
   scanProgress: number
@@ -34,6 +35,7 @@ const SUGGESTIONS = [
 ]
 
 export function Hud({
+  experienceActions,
   mode,
   graph,
   scanProgress,
@@ -75,6 +77,7 @@ export function Hud({
           </div>
         </div>
         <div className="topbar-actions">
+          {experienceActions}
           <button
             type="button"
             className={`chip edit-toggle ${editing ? 'on' : ''}`}

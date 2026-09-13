@@ -1,8 +1,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
+import { localDecoders } from './scripts/decoderAssets.ts'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), localDecoders()],
   server: {
     port: 5173,
     host: true,

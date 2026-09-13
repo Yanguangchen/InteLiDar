@@ -74,4 +74,22 @@ describe('moveObject', () => {
     const next = moveObject(graph, 'missing', [1, 0, 1])
     expect(next).toBe(graph)
   })
+
+  it('keeps the entire rotated footprint inside the room', () => {
+    const graph = fixture()
+    graph.objects[0].rotation = [0, Math.PI / 2, 0]
+    const next = moveObject(graph, 'table-1', [40, 9, -40])
+    expect(next.objects[0].position[0]).toBeCloseTo(3.5)
+    expect(next.objects[0].position[2]).toBeCloseTo(-2)
+    expect(next.objects[0].position[1]).toBe(0.38)
+  })
+
+  it('allows safe movement of a diagonally rotated table without clipping corners', () => {
+    const graph = fixture()
+    graph.objects[0].rotation = [0, Math.PI / 4, 0]
+    const next = moveObject(graph, 'table-1', [40, 9, 40])
+    const inset = 1.5 / Math.sqrt(2)
+    expect(next.objects[0].position[0]).toBeCloseTo(4 - inset)
+    expect(next.objects[0].position[2]).toBeCloseTo(3 - inset)
+  })
 })

@@ -1,6 +1,6 @@
 import { Html, OrbitControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Color,
   DoubleSide,
@@ -14,6 +14,9 @@ import {
   type Mesh,
 } from 'three'
 import { canDragObject } from './editScene'
+import { furnitureAssetFor } from '../assets/catalog'
+import { fitFurniture, updateFurnitureMaterials } from '../assets/furniture'
+import { useFurniture } from '../assets/useFurniture'
 import { ScanPoints } from './ScanPoints'
 import { SensorBeacon } from './SensorBeacon'
 import { approach, createScanAnim, type ScanAnim } from './scanAnim'
@@ -56,6 +59,8 @@ type ViewerSceneProps = {
   dragging: boolean
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
+  gameplayActive?: boolean
+  onAssetsReady?: (ready: boolean) => void
 }
 
 export function ViewerScene({
@@ -68,6 +73,8 @@ export function ViewerScene({
   dragging,
   onDraggingChange,
   onMoveObject,
+  gameplayActive = false,
+  onAssetsReady,
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
   const room = graph?.room ?? FALLBACK_ROOM
@@ -76,6 +83,14 @@ export function ViewerScene({
   const origin = useMemo(() => sensorOrigin(room), [room])
   const schedule = useMemo(() => (graph ? scanSchedule(graph) : null), [graph])
   const sweeping = mode === 'raw' && scanProgress < 1
+  const [loadedAssets, setLoadedAssets] = useState<Record<string, boolean>>({})
+  const onAssetReady = useCallback((key: string, ready: boolean) => {
+    setLoadedAssets((previous) => previous[key] === ready ? previous : { ...previous, [key]: ready })
+  }, [])
+  const assetsReady = objects.every((object) =>
+    !reconstructed || !furnitureAssetFor(object.type) || loadedAssets[`${object.id}:${object.type}`],
+  )
+  useEffect(() => { onAssetsReady?.(assetsReady) }, [assetsReady, onAssetsReady])
 
   const palette = useMemo(
     () => ({ raw: new Color('#05070a'), twin: new Color('#0b1016'), current: new Color('#05070a') }),
@@ -102,7 +117,7 @@ export function ViewerScene({
     if (reconstructed) {
       if (twinStart.current < 0) twinStart.current = now
       const span = settings.motion ? TWIN_DURATION_MS / 1000 : 0
-      anim.twin = span > 0 ? Math.min(1, (now - twinStart.current) / span) : 1
+      anim.twin = span > 0 && !gameplayActive ? Math.min(1, (now - twinStart.current) / span) : 1
     } else {
       twinStart.current = -1
       anim.twin = 0
@@ -159,8 +174,8 @@ export function ViewerScene({
       <OrbitControls
         makeDefault
         enableDamping
-        enabled={!dragging}
-        autoRotate={sweeping && settings.motion && !dragging}
+        enabled={!dragging && !gameplayActive}
+        autoRotate={sweeping && settings.motion && !dragging && !gameplayActive}
         autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
@@ -169,8 +184,8 @@ export function ViewerScene({
       />
 
       <group>
-        <RoomShell room={room} anim={anim} solo={!settings.pointCloud} />
-        {graph && settings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
+        <RoomShell room={room} anim={anim} solo={!settings.pointCloud} gameplayActive={gameplayActive} />
+        {!gameplayActive && graph && settings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
 
         {objects.map((object, index) => (
           <SceneMesh
@@ -183,14 +198,16 @@ export function ViewerScene({
             settings={settings}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
-            editing={editing}
+            editing={editing && !gameplayActive}
+            gameplayActive={gameplayActive}
+            onAssetReady={onAssetReady}
             onDraggingChange={onDraggingChange}
             onMoveObject={onMoveObject}
           />
         ))}
 
-        <SensorBeacon room={room} anim={anim} beam={settings.beam} />
-        <FloorGrid room={room} anim={anim} />
+        {!gameplayActive && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
+        {!gameplayActive && <FloorGrid room={room} anim={anim} />}
       </group>
     </>
   )
@@ -210,11 +227,13 @@ function RoomShell({
   room,
   anim,
   solo,
+  gameplayActive,
 }: {
   room: SceneRoom
   anim: ScanAnim
   /** No return cloud to carry the scan, so the wireframe has to read on its own. */
   solo: boolean
+  gameplayActive: boolean
 }) {
   const raw = useMemo(
     () =>
@@ -277,7 +296,8 @@ function RoomShell({
     surfaces.wall.opacity = anim.twin
     surfaces.floor.opacity = anim.twin
     surfaces.ceiling.opacity = anim.twin
-    surfaces.openWall.opacity = anim.twin * 0.38
+    surfaces.openWall.opacity = anim.twin * (gameplayActive ? 1 : 0.38)
+    surfaces.openWall.transparent = !gameplayActive || anim.twin < 1
 
     // Opaque once the transition lands, so the twin keeps crisp shadows.
     const settled = anim.twin >= 1
@@ -392,6 +412,8 @@ function SceneMesh({
   reconstructed,
   highlighted,
   editing,
+  gameplayActive,
+  onAssetReady,
   onDraggingChange,
   onMoveObject,
 }: {
@@ -404,6 +426,8 @@ function SceneMesh({
   reconstructed: boolean
   highlighted: boolean
   editing: boolean
+  gameplayActive: boolean
+  onAssetReady: (key: string, ready: boolean) => void
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
 }) {
@@ -418,10 +442,13 @@ function SceneMesh({
 
   const draggable = editing && canDragObject(object)
   const isGlass = object.material === 'glass'
+  const { instance, ready } = useFurniture(reconstructed ? object.type : '')
+  const fitted = useMemo(() => instance ? fitFurniture(instance.bounds, object.size) : null, [instance, object.size])
+  useEffect(() => { onAssetReady(`${object.id}:${object.type}`, ready) }, [object.id, object.type, ready, onAssetReady])
 
   // Keyed on identity, not position: the returns belong to the object and travel
   // with it, so dragging furniture never re-scans the room.
-  const cloudKey = `${object.id}:${object.size.join(',')}`
+  const cloudKey = `${object.id}:${object.size.join(',')}:${object.rotation?.join(',') ?? ''}`
   const cloud = useMemo(
     () => buildObjectCloud(objectRef.current, origin),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -468,7 +495,7 @@ function SceneMesh({
 
   const shell = useRef<Group>(null)
   const rawMesh = useRef<Mesh>(null)
-  const twinMesh = useRef<Mesh>(null)
+  const twinMesh = useRef<Group>(null)
 
   useEffect(
     () => () => {
@@ -505,9 +532,12 @@ function SceneMesh({
 
     window.addEventListener('pointermove', onWindowMove)
     window.addEventListener('pointerup', onWindowUp)
+    window.addEventListener('pointercancel', onWindowUp)
     return () => {
+      onWindowUp()
       window.removeEventListener('pointermove', onWindowMove)
       window.removeEventListener('pointerup', onWindowUp)
+      window.removeEventListener('pointercancel', onWindowUp)
     }
   }, [camera, gl, raycaster])
 
@@ -535,6 +565,7 @@ function SceneMesh({
     twinMaterial.emissiveIntensity = glow * solid
     twinMaterial.emissive.copy(highlighted || draggable ? tones.accent : tones.off)
     twinMaterial.color.copy(highlighted ? tones.hot : tones.base)
+    if (instance) updateFurnitureMaterials(instance.materials, solid, glow * solid)
     if (twinMesh.current) {
       twinMesh.current.visible = solid > 0.004
       // The last centimetre of the lift into place.
@@ -545,16 +576,13 @@ function SceneMesh({
   const labelDelay = settings.motion ? (materialise.start * TWIN_DURATION_MS) / 1000 : 0
 
   return (
-    <group position={object.position}>
+    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]} name={`scene-object:${object.id}`} userData={{ semanticObjectId: object.id }}>
       <group ref={shell}>
         <mesh ref={rawMesh} material={rawMaterial}>
           <boxGeometry args={object.size} />
         </mesh>
-        <mesh
+        <group
           ref={twinMesh}
-          material={twinMaterial}
-          castShadow
-          receiveShadow
           onPointerOver={(event) => {
             if (!draggable) return
             event.stopPropagation()
@@ -572,14 +600,22 @@ function SceneMesh({
             document.body.style.cursor = 'grabbing'
           }}
         >
-          <boxGeometry args={object.size} />
-        </mesh>
-        {settings.pointCloud && (
+          {instance && fitted ? (
+            <group position={fitted.position} scale={fitted.scale} dispose={null}>
+              <primitive object={instance.scene} dispose={null} />
+            </group>
+          ) : (
+            <mesh material={twinMaterial} castShadow receiveShadow>
+              <boxGeometry args={object.size} />
+            </mesh>
+          )}
+        </group>
+        {!gameplayActive && settings.pointCloud && (
           <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
         )}
       </group>
 
-      {reconstructed && (
+      {reconstructed && !gameplayActive && (
         <Html
           position={[0, object.size[1] / 2 + 0.2, 0]}
           center
