@@ -1211,6 +1211,32 @@ body,
 .capture-import-file { display: block; border-radius: 12px; background: var(--accent-soft); padding: 14px; font-size: 14px; }
 .capture-import-file input { display: block; margin-top: 12px; width: 100%; font: inherit; }
 .capture-import :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.capture-import-simulated {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--glass-line);
+}
+.capture-import-simulated p { margin: 0 0 12px; }
+.capture-import-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.capture-import-actions button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #04100d;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.capture-import-actions .ghost-button {
+  background: transparent;
+  border-color: var(--glass-line);
+  color: var(--text);
+  font-weight: 500;
+}
+.capture-import-actions button:hover { filter: brightness(1.08); }
 
 .appearance-editor {
   position: absolute;
@@ -1258,7 +1284,7 @@ body,
   .topbar { flex-wrap: wrap; }
   .topbar-actions { flex-wrap: wrap; }
   .topbar .status { display: none; }
-  .app[data-source='roomplan'] .tag { display: block; font-size: 9px; }
+  .app[data-source='roomplan'] .tag, .app[data-source='simulated'] .tag { display: block; font-size: 9px; }
   .appearance-editor { width: 210px; padding: 14px; right: 12px; top: 132px; max-height: calc(100% - 334px); }
   .panel-left {
     display: none;

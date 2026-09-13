@@ -73,7 +73,26 @@ Talking point: the assistant returns ids; the viewer only paints those ids. The 
 
 Clicking a row in the left panel highlights that object too, if you would rather point than type.
 
-## Step 6 — Edit (optional but strong)
+## Step 6 — The bigger room (strong closer, no device needed)
+
+The meeting room makes the point in nine objects. If you have another minute, make it in a hundred.
+
+**Import scan → Load simulated scan.** A generated **open-plan office floor** replaces the demo room: 18 × 11.6 × 3.1 m,
+106 objects across a twelve-desk bank, a meeting zone, a lounge and reception, a kitchenette, and a storage run.
+
+It arrives as raw geometry, so the whole path runs again on a room five times the area: sweep, **AI Reconstruct**, ask.
+The classification log grows with the room (`Chair × 27`, `Table × 18`, and so on), and *Show me all the chairs* now
+lights 27 objects across four zones at once.
+
+Watch what the viewer does with the density: in the twin it names nothing until you ask, then names only what the answer
+highlighted. The scene list on the left still carries all 106.
+
+Do not call this a scan either — it is the strongest slide and the easiest to overclaim. Nothing in it was measured. It is
+generated geometry in the same file format a real capture uses, read through the same validation, and the HUD reads
+**Simulated LiDAR · no device** and **Simulated scan · no device** the whole time. If someone wants it, **Save the scan
+file** hands them `simulated-office-floor.intelidar.json`, which imports like any other export.
+
+## Step 7 — Edit (optional but strong)
 
 Toggle **Edit**. Drag a chair. Show that the door does not move. Ask chairs again if you want to show highlights following the new pose (twin-graph ask uses current positions in the JSON, even though heuristics do not mention coordinates in the reply).
 
@@ -87,6 +106,7 @@ Toggle **Edit**. Drag a chair. Show that the door does not move. Ask chairs agai
 | No sweep at all, room just appears | The machine is set to reduced motion; that path is deliberate |
 | Ask disabled | You are still in raw / analysing |
 | Generic ask reply | Expected without a key, unless the question hits a keyword |
+| Simulated floor slow to furnish | ~100 models load on reconstruct; give it a few seconds, or pick **Balanced** in Graphics |
 
 ## One-line pitch
 

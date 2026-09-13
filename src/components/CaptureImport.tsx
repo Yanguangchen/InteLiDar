@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { MAX_CAPTURE_BYTES, parseCapture } from '../scene/importCapture'
+import { simulatedCaptureJson } from '../scene/simulatedCapture'
 import type { SceneGraph } from '../scene/types'
 
 export function CaptureImport({ onImport, disabled = false }: { onImport: (graph: SceneGraph) => void; disabled?: boolean }) {
@@ -20,6 +21,24 @@ export function CaptureImport({ onImport, disabled = false }: { onImport: (graph
       setError(cause instanceof Error ? cause.message : 'Could not read this scan. Please try again.')
     } finally { setReading(false) }
   }
+  /** The generated floor takes the same validated route as a file off the device. */
+  function loadSimulated() {
+    setError(null)
+    try {
+      onImport(parseCapture(simulatedCaptureJson()))
+      dialog.current?.close()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not build the simulated scan.')
+    }
+  }
+  function downloadSimulated() {
+    const url = URL.createObjectURL(new Blob([simulatedCaptureJson()], { type: 'application/json' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'simulated-office-floor.intelidar.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
   return <>
     <button type="button" className="chip" disabled={disabled} onClick={() => { setError(null); dialog.current?.showModal() }}>Import scan</button>
     <dialog ref={dialog} className="capture-import" aria-labelledby="capture-import-title">
@@ -38,6 +57,19 @@ export function CaptureImport({ onImport, disabled = false }: { onImport: (graph
         <input type="file" accept=".json,application/json" aria-label="Choose scan from Files" disabled={reading} onChange={(event) => { void readFile(event) }} />
       </label>
       {error && <p className="error" role="alert">{error}</p>}
+
+      <div className="capture-import-simulated">
+        <p className="panel-kicker">No iPhone to hand</p>
+        <p>Load a generated <strong>open-plan office floor</strong> — 18 × 11.6 m, over a hundred objects — and run the
+          whole pipeline on it: sweep, reconstruct, ask, edit, renovate.</p>
+        <div className="capture-import-actions">
+          <button type="button" onClick={loadSimulated}>Load simulated scan</button>
+          <button type="button" className="ghost-button" onClick={downloadSimulated}>Save the scan file</button>
+        </div>
+        <p className="appearance-note">No sensor produced this floor. It is generated geometry in the same file format a
+          capture uses, labelled <strong>Simulated</strong> throughout so it is never mistaken for a measured room.</p>
+      </div>
+
       <p className="appearance-note">Safari views and edits your scan; the native app uses the LiDAR sensor. Viewing is local. Asking a question sends the room model to the configured spatial assistant. Reloading clears the imported scene.</p>
       <p className="appearance-note">The capture app must first be built and installed from this project's <code>ios/</code> folder using Xcode on a Mac.</p>
     </dialog>
