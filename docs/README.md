@@ -8,6 +8,7 @@ Guides for running and extending InteLiDar. Start at the [README](../README.md) 
 | [Demo script](./demo-script.md) | Live presentation |
 | [Architecture](./architecture.md) | How the pieces fit |
 | [Capture](./capture.md) | Where the geometry comes from; wiring a real scanner |
+| [Capture geometry](./capture-geometry.md) | How a RoomPlan scan becomes a scene graph, and why |
 | [Export](./export.md) | Getting a room out: scan file, schedule, floor plan, 3D model |
 | [HTTP API](./api.md) | Backend and client authors |
 | [Scene graph](./scene-graph.md) | Anyone changing room JSON |

@@ -29,6 +29,8 @@ The export contains room bounds, object dimensions, positions, rotations, catego
 
 ## Geometry contract
 
+The reasoning behind each rule, with the measured numbers, is in [capture geometry](../docs/capture-geometry.md).
+
 - Format marker `intelidar.roomplan`, version `1`, source `roomplan`.
 - Metres, Y up, right-handed; origin normalized to the centre of the enclosing floor rectangle.
 - **The room is squared up before it is measured.** RoomPlan reports geometry in the AR session's world frame, whose heading is wherever the phone pointed at **Start scan**, not the room's walls. The exporter derives the dominant wall yaw (circular mean of 4θ, weighted by wall width) and rotates all geometry onto it first. Without this a 5 × 4 m room scanned 45° off axis exports as 6.4 × 6.4 m with its furniture on the diagonal. A room already square to the world is unchanged; the nearest alignment may transpose width and depth, which is still square.

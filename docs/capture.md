@@ -58,7 +58,7 @@ The native app checks `RoomCaptureSession.isSupported` before starting and reque
 
 Exports contain the enclosing room dimensions, full local object extents, centres, XYZ Euler rotations, RoomPlan labels, and appearance defaults. Origin is normalized to the floor centre, coordinates are right-handed/Y-up, and units are metres. Raw depth, camera images, scanned textures, and arbitrary wall polygons are not exported. Furniture detail and colors in the web viewer are generated representations, not captured surface detail.
 
-Before the room is measured, the exporter squares it up: RoomPlan's world frame is oriented to the phone's heading at the start of the scan, so the enclosing box is taken against the dominant wall direction rather than against that arbitrary heading. Scanning from a corner therefore measures the same room as scanning from a wall.
+Before the room is measured, the exporter squares it up ([how, and why it matters](./capture-geometry.md)): RoomPlan's world frame is oriented to the phone's heading at the start of the scan, so the enclosing box is taken against the dominant wall direction rather than against that arbitrary heading. Scanning from a corner therefore measures the same room as scanning from a wall.
 
 The room shell is an enclosing rectangle; L-shaped rooms, angled walls, curves, and open passageways are approximated. Files are limited to 5 MB and 500 objects, with positive dimensions no larger than 50 m. Exports use namespaced ids. The backend preserves `source` and the incoming labels through reconstruction for both `roomplan` and `simulated` scenes, and avoids demo id lookup for them.
 
