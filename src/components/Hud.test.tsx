@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Hud } from './Hud'
 import { sampleGraph } from '../test/sampleGraph'
 import { PRESETS } from '../settings/graphics'
@@ -159,5 +159,99 @@ describe('Hud', () => {
     const { user, props } = renderHud({ mode: 'twin' })
     await user.click(screen.getByRole('button', { name: /Conference table/ }))
     expect(props.onSelectObject).toHaveBeenCalledWith('table-1')
+  })
+})
+
+describe('AI reply read aloud', () => {
+  const speak = vi.fn<(utterance: SpeechSynthesisUtterance) => void>()
+  const cancel = vi.fn()
+
+  beforeEach(() => {
+    speak.mockReset()
+    cancel.mockReset()
+    vi.stubGlobal('speechSynthesis', { speak, cancel })
+    vi.stubGlobal('SpeechSynthesisUtterance', class {
+      text: string
+      onend = null
+      onerror = null
+      constructor(text: string) { this.text = text }
+    })
+  })
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('reads the reply only on request and lets the user stop without asking again', async () => {
+    const { user, props } = renderHud({ mode: 'twin', reply: 'The door is on your left.' })
+    expect(speak).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    expect(speak).toHaveBeenCalledTimes(1)
+    expect(speak.mock.calls[0][0].text).toBe(props.reply)
+    cancel.mockClear()
+    await user.click(screen.getByRole('button', { name: 'Stop reading' }))
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Read aloud' })).toBeEnabled()
+    expect(props.onAsk).not.toHaveBeenCalled()
+  })
+
+  it('allows replay after speech finishes', async () => {
+    const { user } = renderHud({ reply: 'Two chairs.' })
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    const utterance = speak.mock.calls[0][0]
+    act(() => utterance.onend?.call(utterance, new Event('end') as SpeechSynthesisEvent))
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    expect(speak).toHaveBeenCalledTimes(2)
+  })
+
+  it('cancels the old reply when it changes and ignores late speech events', async () => {
+    const { user, props, rerender } = renderHud({ reply: 'Two chairs.' })
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    const oldUtterance = speak.mock.calls[0][0]
+    const lateEnd = oldUtterance.onend
+    cancel.mockClear()
+    rerender(<Hud {...props} reply="The door is ahead." />)
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(speak).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    act(() => lateEnd?.call(oldUtterance, new Event('end') as SpeechSynthesisEvent))
+    expect(screen.getByRole('button', { name: 'Stop reading' })).toBeEnabled()
+    expect(speak.mock.calls[1][0].text).toBe('The door is ahead.')
+  })
+
+  it.each(['clear', 'unmount'])('stops playback on %s', async (action) => {
+    const { user, props, rerender, unmount } = renderHud({ reply: 'Two chairs.' })
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    cancel.mockClear()
+    if (action === 'clear') rerender(<Hud {...props} reply={null} />)
+    else unmount()
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: 'Read aloud' })).not.toBeInTheDocument()
+  })
+
+  it.each(['event', 'exception'])('shows a retryable error for a speech %s', async (failure) => {
+    if (failure === 'exception') speak.mockImplementationOnce(() => { throw new Error('Unavailable') })
+    const { user } = renderHud({ reply: 'Two chairs.' })
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    if (failure === 'event') {
+      const utterance = speak.mock.calls[0][0]
+      act(() => utterance.onerror?.call(utterance, new Event('error') as SpeechSynthesisErrorEvent))
+    }
+    expect(screen.getByRole('status')).toHaveTextContent(/couldn't read.*try again/i)
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }))
+    expect(screen.queryByText(/couldn't read/i)).not.toBeInTheDocument()
+    expect(speak).toHaveBeenCalledTimes(2)
+  })
+
+  it('explains when speech is unsupported while keeping the reply readable', () => {
+    vi.stubGlobal('speechSynthesis', undefined)
+    renderHud({ reply: 'Two chairs.' })
+    expect(screen.getByText('Two chairs.')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Read aloud' })).toBeDisabled()
+    expect(screen.getByText(/read aloud is not supported in this browser/i)).toBeVisible()
+  })
+
+  it.each([null, '', '   '])('offers no speech control for an empty reply (%s)', (reply) => {
+    renderHud({ reply })
+    expect(screen.queryByRole('button', { name: 'Read aloud' })).not.toBeInTheDocument()
+    expect(speak).not.toHaveBeenCalled()
   })
 })

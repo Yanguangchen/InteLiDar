@@ -6,6 +6,7 @@ import { GraphicsMenu } from './GraphicsMenu'
 import { CaptureImport } from './CaptureImport'
 import { ExportPanel } from './ExportPanel'
 import { useSpecular } from './useSpecular'
+import { ReadAloud } from './ReadAloud'
 
 type HudProps = {
   experienceActions?: ReactNode
@@ -240,6 +241,7 @@ export function Hud({
             {reply}
           </p>
         )}
+        {reply?.trim() && <ReadAloud key={reply} text={reply} />}
         {error && <p className="error">{error}</p>}
       </form>
     </div>

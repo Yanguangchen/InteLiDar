@@ -1,6 +1,18 @@
 import { expect, test } from '@playwright/test'
 
 test('demo path: sweep, reconstruct, ask chairs, then enable edit', async ({ page }) => {
+  // Exercise the speech controls without relying on an installed audio device.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speak(utterance: SpeechSynthesisUtterance) {
+          document.documentElement.dataset.spokenText = utterance.text
+        },
+        cancel() { delete document.documentElement.dataset.spokenText },
+      },
+    })
+  })
   await page.goto('/')
 
   // The sensor sweeps before anything can be reconstructed.
@@ -21,6 +33,10 @@ test('demo path: sweep, reconstruct, ask chairs, then enable edit', async ({ pag
 
   await page.getByRole('button', { name: 'Show me all the chairs.' }).click()
   await expect(page.locator('.reply')).toContainText(/chair/i)
+  await page.getByRole('button', { name: 'Read aloud', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-spoken-text', (await page.locator('.reply').innerText()).trim())
+  await page.getByRole('button', { name: 'Stop reading', exact: true }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-spoken-text')
   await expect(page.getByRole('button', { name: /Chair/ }).first()).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -40,6 +56,7 @@ test('demo path: sweep, reconstruct, ask chairs, then enable edit', async ({ pag
   await expect(page.getByLabel('Color', { exact: true })).toHaveValue('#467568')
 
   await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByRole('button', { name: 'Read aloud', exact: true })).toBeInViewport()
   await expect(page.getByRole('complementary', { name: 'Object appearance' })).toBeVisible()
   await page.getByRole('button', { name: 'Restore model colors' }).click()
   await expect(page.getByLabel('Color', { exact: true })).toHaveValue('#a58a68')

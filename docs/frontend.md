@@ -113,7 +113,7 @@ The rule for anything added here: it must cost frames and carry no meaning. The 
 - **Left panel** — room name, size, object count, source line, object list. During the sweep, undetected objects are held open as `.ghost` placeholders so the list never jumps.
 - **Object rows** — buttons. Clicking one highlights that object in the canvas; rows carry `aria-pressed` and light up for ask results too.
 - **Centre stage** — capture readout while sweeping, Reconstruct CTA once swept, the analysis `<ol>` in `analysing`, nothing in `twin`
-- **Ask bar** — input, submit, three suggestions, reply, error
+- **Ask bar** — input, submit, three suggestions, reply, error. Each non-empty reply has a **Read aloud** button using browser speech synthesis; it becomes **Stop reading** during playback. Speech starts only on a click and stops when the reply changes or the HUD closes. Unsupported browsers show a disabled control and an explanation; playback failures can be retried. Voice availability and sound depend on the browser/device.
 
 Edit hint when the toggle is on: *Drag tables, chairs, and equipment. Doors and windows stay fixed.*
 

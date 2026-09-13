@@ -825,6 +825,49 @@ body,
   animation: row-in 0.45s var(--ease-liquid) both;
 }
 
+.reply-audio {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.read-aloud {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(62, 224, 194, 0.3);
+  border-radius: 999px;
+  background: rgba(62, 224, 194, 0.08);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.read-aloud:hover:not(:disabled) {
+  background: rgba(62, 224, 194, 0.18);
+}
+
+.read-aloud:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.read-aloud:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speech-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .error {
   margin: 11px 0 0;
   color: var(--danger);
