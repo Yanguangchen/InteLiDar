@@ -88,11 +88,34 @@ describe('Hud', () => {
 
   it('lists objects only once the sweep has found them', () => {
     const { rerender, props } = renderHud({ scanProgress: 0.02 })
-    expect(screen.getByText('Conference table')).toBeInTheDocument()
-    expect(screen.queryByText('Door')).not.toBeInTheDocument()
+    expect(screen.getByText('Unknown object')).toBeInTheDocument()
+    expect(screen.queryByText('Unknown opening')).not.toBeInTheDocument()
 
     rerender(<Hud {...props} scanProgress={1} />)
-    expect(screen.getByText('Door')).toBeInTheDocument()
+    expect(screen.getByText('Unknown opening')).toBeInTheDocument()
+  })
+
+  it('names nothing before reconstruct, whatever the scan already knows', () => {
+    const { rerender, props } = renderHud({ graph: { ...sampleGraph, source: 'simulated' } })
+    expect(screen.queryByText('Conference table')).not.toBeInTheDocument()
+    expect(screen.getByText('Unknown object')).toBeInTheDocument()
+    expect(screen.getByText('Unknown opening')).toBeInTheDocument()
+
+    rerender(<Hud {...props} mode="twin" />)
+    expect(screen.getByText('Conference table')).toBeInTheDocument()
+    expect(screen.queryByText('Unknown object')).not.toBeInTheDocument()
+  })
+
+  it('never presents a simulated scan as an iPhone capture', () => {
+    renderHud({ mode: 'twin', graph: { ...sampleGraph, source: 'simulated' } })
+    expect(screen.getByText('Simulated LiDAR · no device')).toBeInTheDocument()
+    expect(screen.getByText('Simulated scan · no device')).toBeInTheDocument()
+    expect(screen.queryByText(/iPhone LiDAR/)).not.toBeInTheDocument()
+  })
+
+  it('credits a device capture to the device', () => {
+    renderHud({ mode: 'twin', graph: { ...sampleGraph, source: 'roomplan' } })
+    expect(screen.getAllByText('iPhone LiDAR · RoomPlan').length).toBeGreaterThan(0)
   })
 
   it('lets a presenter skip the opening sweep', async () => {

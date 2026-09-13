@@ -13,9 +13,38 @@ The iOS source is in [ios/](../ios/README.md). It must be built and installed us
 
 The scan opens directly as a semantic twin with RoomPlan's labels and measured object poses. Appearance editing and the spatial assistant operate on this imported graph. The source reads **iPhone LiDAR · RoomPlan**. Importing validates the file before replacing the current scene; a failed import preserves the previous scene. Viewing an export does not require the API, while asking questions does.
 
-Only the versioned InteLiDar export is accepted. Generic RoomPlan JSON, USDZ, OBJ, GLB, PLY, LAS, and E57 are not accepted by the scan importer. The importer expects normalized room bounds and object boxes, not an arbitrary mesh or point cloud.
+Only the versioned InteLiDar exports are accepted — `intelidar.roomplan` from the device and `intelidar.simulated` from the
+generator, each of which must declare the matching `source`. A file may name a model from the bundled library by `assetId`;
+unknown ids are rejected, and model urls are always resolved from the library rather than taken from the file. Generic
+RoomPlan JSON, USDZ, OBJ, GLB, PLY, LAS, and E57 are not supported. The importer expects normalized room bounds and object boxes, not an arbitrary mesh or point cloud.
 
-A saved, self-contained GLB can be opened separately through **Import room**, including embedded textures, floor/unit setup, and desktop gameplay. See [playable rooms](./playable-rooms.md).
+A saved, self-contained GLB is a different path: open it through **Import room** for embedded textures, floor/unit setup, and desktop gameplay. See [playable rooms](./playable-rooms.md).
+
+## No iPhone? Use the simulated floor
+
+**Import scan → Load simulated scan** opens a generated **open-plan office floor**: 18 × 11.6 × 3.1 m, 106 objects across a
+desk bank, a meeting zone, a lounge and reception, a kitchenette, and a storage run, plus two doors and five windows.
+
+It is the way to demonstrate the whole product without a device. It runs the full path the demo room does — sweep, **AI
+Reconstruct**, ask, edit, renovate — on a room five times the floor area with twelve times the objects.
+
+Nothing about it is measured. It is generated geometry, emitted as a capture file in the same versioned format the iOS
+exporter writes, and read back through the same `parseCapture` validation, so it is never cast onto the graph unchecked.
+Its `format` is `intelidar.simulated` and its `source` is `simulated`; the HUD reads **Simulated LiDAR · no device** and
+**Simulated scan · no device** throughout, and no surface presents it as an iPhone capture.
+
+**Save the scan file** in the same dialog downloads it as `simulated-office-floor.intelidar.json`, which imports exactly
+like a real export — useful for sharing a demo scene, or for exercising the importer without a phone.
+
+The layout is declared rather than randomised, so it looks the same every run, and `src/scene/simulatedCapture.test.ts`
+holds it to that: everything inside the shell, nothing interpenetrating, nothing floating, every model in the library, and
+a walkable aisle left open between the desk bank and the meeting zone.
+
+## Getting a room back out
+
+Whatever came in — demo fixture, simulated floor, or device capture — **Export** writes it back out as a scan file, an
+object schedule, a dimensioned floor plan, or a glTF model. An exported scan file re-imports here with its edits, and an
+exported model opens through **Import room**. See [export](./export.md).
 
 ## The initial scene is still a demo
 
@@ -29,7 +58,7 @@ The native app checks `RoomCaptureSession.isSupported` before starting and reque
 
 Exports contain the enclosing room dimensions, full local object extents, centres, XYZ Euler rotations, RoomPlan labels, and appearance defaults. Origin is normalized to the floor centre, coordinates are right-handed/Y-up, and units are metres. Raw depth, camera images, scanned textures, and arbitrary wall polygons are not exported. Furniture detail and colors in the web viewer are generated representations, not captured surface detail.
 
-The room shell is an enclosing rectangle; L-shaped rooms, angled walls, curves, and open passageways are approximated. Files are limited to 5 MB and 500 objects, with positive dimensions no larger than 50 m. Exports use namespaced ids. The backend preserves `source: roomplan` and device labels through reconstruction and avoids demo id lookup for these scenes.
+The room shell is an enclosing rectangle; L-shaped rooms, angled walls, curves, and open passageways are approximated. Files are limited to 5 MB and 500 objects, with positive dimensions no larger than 50 m. Exports use namespaced ids. The backend preserves `source` and the incoming labels through reconstruction for both `roomplan` and `simulated` scenes, and avoids demo id lookup for them.
 
 The native app makes no network requests. The user explicitly saves/shares its export. Importing is local to the browser; asking a question sends the graph to the API and its configured reasoner. Reloading clears the imported scene and appearance edits; the saved export can be imported again.
 

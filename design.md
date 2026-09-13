@@ -36,6 +36,8 @@ The app includes a **browser UI over a mock meeting room**, with a FastAPI scene
 | Desktop movement, following camera, collisions | In place |
 | Local static GLB import and floor/unit setup | In place; session only |
 | LiDAR iPhone / RoomPlan import | Native source + Safari file import; Xcode/device verification pending |
+| Simulated capture (generated office floor) | In place — same file format and validation, `source: simulated` |
+| Export (scan file, schedule, floor plan, glTF) | In place — pure functions of the graph |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
 
@@ -125,6 +127,9 @@ Rules:
 - Do not prompt an LLM with raw meshes. Send this graph (plus optional image refs later).
 - Ingest **strips** type, label, material, and confidence so reconstruct has work to do.
 - Reconstruct looks up demo ids first, then classifies unknown geometry by size.
+- Graphs that arrive labelled (`roomplan`, `simulated`) keep those labels: no id lookup, no size heuristic.
+- Raw mode is a **presentation** state, not a data state. A labelled graph shown before reconstruct still reads
+  `Unknown object` / `Unknown opening`, so an imported scan cannot give the answer away ahead of the reconstructor.
 
 Full field semantics and heuristic tables: [docs/scene-graph.md](./docs/scene-graph.md).
 
@@ -146,6 +151,12 @@ src/
   scene/scanCloud.ts        # deterministic surface sampling
   scene/scanAnim.ts         # shared mutable animation clock
   scene/useScanProgress.ts  # sweep timing, skip, reduced motion
+  scene/simulatedCapture.ts # generated office floor, emitted as a capture file
+  scene/importCapture.ts    # capture-file validation (roomplan + simulated)
+  scene/roomScale.ts        # what a room's size and density cost the viewer
+  scene/exportScene.ts      # scan file, object schedule, floor plan (pure)
+  scene/exportModel.ts      # the graph as self-contained binary glTF
+  scene/download.ts         # hand a file to the user from a click
   scene/types.ts            # scene graph types
 ```
 
@@ -158,6 +169,8 @@ Tests: `src/**/*.test.ts{,x}`, `e2e/demo.spec.ts`. Details: [docs/frontend.md](.
 - Edit mode lets `furniture` and `equipment` slide on the floor plane; `opening` stays fixed. Y is unchanged. Positions are clamped to the room footprint minus half-size.
 - Orbit is disabled only while a piece is being dragged.
 - Reconstruct is withheld until ingest succeeds **and** the sweep finishes. Ask is disabled until `twin`. Edit is disabled while sweeping and during `analysing`.
+- Room size and density are viewer concerns, not graph concerns: `roomScale.ts` decides camera framing, shadow extent,
+  ceiling lamps, and whether an object carries a name plate. A crowded scene names only what an answer highlighted.
 
 UI surfaces: [docs/frontend.md](./docs/frontend.md).
 

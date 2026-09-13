@@ -10,7 +10,7 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 
 | Item | In this repo |
 | --- | --- |
-| LiDAR room scan | iPhone RoomPlan capture source + Safari file import implemented; native build and device verification pending ([capture.md](./capture.md)) |
+| LiDAR room scan | iPhone RoomPlan capture source + Safari file import implemented; native build and device verification pending ([capture.md](./capture.md)). A generated office floor stands in when no device is available ([capture.md](./capture.md#no-iphone-use-the-simulated-floor)) |
 | Exported 3D mesh | Axis-aligned boxes from the graph |
 | Browser 3D viewer | React Three Fiber |
 | Basic object or surface recognition | Reconstruct (demo ids + size heuristics) |
@@ -28,6 +28,8 @@ The goal is to show that AI can turn a raw spatial scan into an **intelligent di
 | Mesh smoothing | Out of scope for boxes |
 | AI-generated textures | Not started |
 | Scene comparison between two scans | Not started |
+| Large, furnished demo scene without a device | Done — simulated 18 × 11.6 m office floor, 106 objects |
+| Export the twin | Done — scan file, object schedule, floor plan, glTF model ([export.md](./export.md)) |
 
 ## Future work
 
