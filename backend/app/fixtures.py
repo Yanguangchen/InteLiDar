@@ -22,6 +22,7 @@ DEMO_OBJECTS: list[SceneObject] = [
         size=(2.4, 0.76, 1.2),
         material="wood",
         color="#8d5a32",
+        shape="rounded",
         confidence=0.94,
     ),
     SceneObject(
@@ -45,7 +46,8 @@ DEMO_OBJECTS: list[SceneObject] = [
         size=(0.48, 0.92, 0.52),
         rotation=(0, math.pi, 0),
         material="fabric",
-        color="#3d4a5c",
+        color="#467568",
+        shape="armchair",
         confidence=0.94,
     ),
     SceneObject(
@@ -57,7 +59,8 @@ DEMO_OBJECTS: list[SceneObject] = [
         size=(0.48, 0.92, 0.52),
         rotation=(0, 0, 0),
         material="fabric",
-        color="#3d4a5c",
+        color="#b96348",
+        shape="visitor",
         confidence=0.94,
     ),
     SceneObject(
@@ -69,7 +72,8 @@ DEMO_OBJECTS: list[SceneObject] = [
         size=(0.48, 0.92, 0.52),
         rotation=(0, 0, 0),
         material="fabric",
-        color="#3d4a5c",
+        color="#7086a3",
+        shape="task",
         confidence=0.94,
     ),
     SceneObject(

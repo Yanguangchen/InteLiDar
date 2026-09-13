@@ -23,7 +23,7 @@ This repository is a hackathon MVP. Capture and computer vision are designed in;
 | Desktop avatar play with furniture GLBs and collisions | Working |
 | Local static GLB room import and setup | Working |
 | OpenAI ask adapter (heuristic fallback without a key) | Working |
-| Real iPhone / iPad RoomPlan import | Not started |
+| LiDAR iPhone capture + Safari import | Native source and file import implemented; Xcode/device verification pending ([setup](./ios/README.md)) |
 | Image-based detection and segmentation | Not started |
 
 Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reconstruct**, then ask *Show me all the chairs.*
@@ -89,7 +89,8 @@ Full walkthrough: [docs/getting-started.md](./docs/getting-started.md).
 3. Press **✨ AI Reconstruct**. Classification steps play in the HUD (`Unknown object → Chair × 4`, and so on).
 4. The scene becomes a **semantic twin**, materialising object by object: materials, labels, lighting.
 5. Ask *Show me all the chairs.* Matching objects glow in the canvas, and so do their rows in the scene list.
-6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Doors and windows stay fixed.
+6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Select an object in **Appearance** to change its shape, textured material, and color. Doors and windows stay fixed in position; their appearance can still change. Appearance edits last for the current page session.
+7. Open **Renovate** to browse 26 models from `models/`, preview them, and add furniture at its real-world scale. Select existing or added furniture to rotate or remove it; **Undo** reverses the last add or removal. See the [renovation guide](docs/renovation.md). Layout changes last for the current page session.
 
 Suggested questions once reconstructed:
 
@@ -165,7 +166,7 @@ Keep geometry, semantics, and presentation separate. The graph is JSON. The canv
 | Ask | OpenAI chat completions (JSON) when `OPENAI_API_KEY` is set; otherwise heuristics |
 | Tests | Vitest (`src/**/*.test.ts{,x}`), Pytest (`backend/tests`), Playwright (`e2e`) |
 
-Planned, not in this repo yet: RoomPlan export, YOLO / Grounding DINO / SAM, glTF asset swap.
+RoomPlan capture source and export/import setup: [ios/README.md](./ios/README.md). Planned: YOLO / Grounding DINO / SAM and glTF asset swap.
 
 ## Why LiDAR
 

@@ -20,19 +20,17 @@ def heuristic_ask(graph: SceneGraph, question: str) -> AskResult:
     equipment = [obj for obj in graph.objects if obj.category == "equipment"]
     doors = _of_type(graph, "door")
     windows = _of_type(graph, "window")
-    obstructors = [obj for obj in graph.objects if obj.type in {"table", "chair", "shelf"}]
+    obstructors = [obj for obj in graph.objects if obj.category == "furniture" and obj.type != "rug"]
     room = graph.room
 
     if "chair" in q:
         return AskResult(
-            reply=f"{len(chairs)} chairs detected around the conference table. Highlighting them in the scene.",
+            reply=f"{len(chairs)} chairs in the current layout. Highlighting them in the scene.",
             highlight_ids=[obj.id for obj in chairs],
         )
     if "table" in q:
         return AskResult(
-            reply="One conference table sits at the center of the room. Highlighting it now."
-            if len(tables) == 1
-            else f"{len(tables)} tables found. Highlighting them now.",
+            reply=f"{len(tables)} tables in the current layout. Highlighting them now.",
             highlight_ids=[obj.id for obj in tables],
         )
     if "door" in q or "exit" in q:
@@ -49,16 +47,18 @@ def heuristic_ask(graph: SceneGraph, question: str) -> AskResult:
         )
     if any(word in q for word in ("electronic", "equipment", "monitor", "display")):
         return AskResult(
-            reply="Electronic equipment: one display on the conference table."
-            if len(equipment) == 1
-            else f"{len(equipment)} electronic objects found.",
+            reply=f"{len(equipment)} electronic objects in the current layout.",
             highlight_ids=[obj.id for obj in equipment],
         )
     if any(word in q for word in ("obstruct", "walkway", "movement", "block")):
         return AskResult(
-            reply="The table, chairs, and shelf sit in the main circulation path and could obstruct movement.",
+            reply=f"Highlighting {len(obstructors)} furniture items to review for walking clearance.",
             highlight_ids=[obj.id for obj in obstructors],
         )
+    matched = [obj for obj in graph.objects if obj.type != "object" and (obj.type in q or obj.label.lower() in q)]
+    if matched:
+        return AskResult(reply=f"Found {len(matched)} matching objects in the current layout.",
+                         highlight_ids=[obj.id for obj in matched])
     return AskResult(
         reply=(
             f"This {room.name} is {room.width}m × {room.depth}m. "

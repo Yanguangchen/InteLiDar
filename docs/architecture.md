@@ -45,7 +45,7 @@ POST /scene/ask  ──►  { reply, highlightIds }
 Viewer paints ids; edit still writes the twin graph
 ```
 
-Capture and vision are **not started**: no device, no driver, no RoomPlan bridge. Ingest with an empty body clones [backend/app/fixtures.py](../backend/app/fixtures.py) and strips semantics so the reconstruct demo has a before/after. What stands in for a scanner, and what a real one would have to send: [capture.md](./capture.md).
+Native RoomPlan capture source is in [ios/](../ios/README.md); a versioned file importer loads its normalized graph directly in Safari, preserving RoomPlan labels. Native build and device verification remain pending. Ingest with an empty body still clones [backend/app/fixtures.py](../backend/app/fixtures.py) for the demo. Image-based vision remains unimplemented. See [capture.md](./capture.md).
 
 ## Process layout
 
@@ -125,11 +125,11 @@ The viewer builds axis-aligned boxes only. Rotation is stored on the graph but n
 - The browser never holds the OpenAI key.
 - CORS is limited to the Vite origin. The proxy is the supported path.
 - Highlight ids from any reasoner are intersected with the graph before they reach the client.
-- Reconstruct may copy labels from the demo fixture **by id**. Unknown ids go through size heuristics. Do not rely on demo ids in new capture code.
+- Reconstruct copies labels from the demo fixture **by id** for demo graphs; unknown demo ids use size heuristics. Graphs with `source: roomplan` retain device labels and bypass fixture lookup.
 
 ## Extending the pipeline
 
-**RoomPlan / glTF import** should become an ingest path that fills `position` and `size` (and later mesh URLs) without labels. Keep `/scene/ingest` as the seam. Conversion requirements and the gaps to close first: [capture.md](./capture.md#writing-a-real-scanner-client).
+**RoomPlan import** reads normalized `.intelidar.json` exports from the native capture app, validates dimensions/poses/ids, and opens a labelled graph directly. The legacy `/scene/ingest` endpoint still strips semantics for demo/custom boxes. glTF import remains unimplemented. Contract and limitations: [capture.md](./capture.md).
 
 **Vision** should attach `type`, `confidence`, and maybe `color` onto capture objects *or* a parallel detections array. Reconstruct can then prefer vision over box heuristics.
 

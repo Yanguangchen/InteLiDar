@@ -1,5 +1,18 @@
-import { Euler, Matrix4 } from 'three'
 import type { SceneGraph, SceneObject, Vec3 } from './types'
+import { FINISHES, SHAPES, type AppearancePatch } from './appearance'
+import { Euler, Matrix4 } from 'three'
+
+export function updateAppearance(graph: SceneGraph, id: string, patch: AppearancePatch): SceneGraph {
+  const target = graph.objects.find((object) => object.id === id)
+  if (!target) return graph
+  const valid: AppearancePatch = {}
+  if (patch.color === null) valid.color = null
+  if (patch.color && /^#[0-9a-f]{6}$/i.test(patch.color)) valid.color = patch.color
+  if (patch.material && FINISHES.some((finish) => finish === patch.material)) valid.material = patch.material
+  if (patch.shape && (SHAPES[target.type] ?? ['rounded', 'rectangular']).includes(patch.shape)) valid.shape = patch.shape
+  if (!Object.keys(valid).length) return graph
+  return { ...graph, objects: graph.objects.map((object) => object.id === id ? { ...object, ...valid } : object) }
+}
 
 const DRAGGABLE = new Set(['furniture', 'equipment'])
 
