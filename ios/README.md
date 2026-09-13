@@ -13,6 +13,12 @@ For a Codex-assisted Mac setup, use the [copy-paste activation handoff](./CODEX-
 
 `RoomCaptureSession.isSupported` and the phone device idiom gate scanning before the camera session starts. Unsupported phones and simulators show an explanation with capture disabled. Installing the Safari website on the Home Screen does not install this native app.
 
+**You are not tethered to Xcode afterwards, but a free account's signature expires in 7 days.** The installed app runs
+standalone with no cable — until the certificate lapses, after which it refuses to launch until you reconnect and press
+Run again. A paid Apple Developer Program membership lasts about a year instead. Budget for this if your event runs
+longer than a week. On a free account you also need to trust the certificate once, under **Settings → General → VPN &
+Device Management**. Costs and the alternatives are laid out in [getting real LiDAR in](../docs/lidar-on-iphone.md).
+
 This repository contains source, not a signed IPA or TestFlight release. **The native app has not been compiled or tested on an iPhone in the Windows development environment.** Its Swift syntax, Xcode project structure, scheme XML, and permission plist were checked; those checks do not replace an Xcode build and device test.
 
 ## Scan → Files → Safari
