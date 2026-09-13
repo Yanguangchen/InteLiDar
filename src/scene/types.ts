@@ -28,7 +28,7 @@ export type SceneObject = {
 }
 
 export type SceneGraph = {
-  source?: 'demo' | 'roomplan'
+  source?: 'demo' | 'roomplan' | 'simulated'
   room: SceneRoom
   objects: SceneObject[]
 }

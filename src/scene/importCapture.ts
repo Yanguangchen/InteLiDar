@@ -1,6 +1,19 @@
 import type { SceneGraph, SceneObject, Vec3 } from './types'
+import { furnitureAsset } from './furnitureCatalog'
 
 export const MAX_CAPTURE_BYTES = 5 * 1024 * 1024
+
+/**
+ * The capture formats this build accepts, and the provenance each one carries.
+ *
+ * A measured RoomPlan export and a generated demo scan travel the same
+ * validation, but they never claim the same source: the HUD tells the two apart
+ * so a simulated floor is never presented as something a sensor measured.
+ */
+const ACCEPTED: Record<string, SceneGraph['source']> = {
+  'intelidar.roomplan': 'roomplan',
+  'intelidar.simulated': 'simulated',
+}
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid room scan structure.')
@@ -30,7 +43,8 @@ export function parseCapture(text: string): SceneGraph {
   let json: unknown
   try { json = JSON.parse(text) } catch { throw new Error('This file is not valid JSON. Choose an InteLiDar scan export.') }
   const data = record(json)
-  if (data.format !== 'intelidar.roomplan' || data.version !== 1 || data.source !== 'roomplan') {
+  const source = typeof data.format === 'string' ? ACCEPTED[data.format] : undefined
+  if (!source || data.version !== 1 || data.source !== source) {
     throw new Error('Choose a version 1 scan exported by InteLiDar Capture (.intelidar.json).')
   }
   const room = record(data.room)
@@ -59,11 +73,16 @@ export function parseCapture(text: string): SceneGraph {
       if (typeof item.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(item.color)) throw new Error('Invalid object color.')
       object.color = item.color
     }
+    if (item.assetId != null) {
+      // Model urls are resolved from the bundled library by id, never taken from the file.
+      if (typeof item.assetId !== 'string' || !furnitureAsset(item.assetId)) throw new Error('This scan references a model that is not in the furniture library.')
+      object.assetId = item.assetId
+    }
     if (item.confidence != null) {
       if (typeof item.confidence !== 'number' || !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1) throw new Error('Invalid object confidence.')
       object.confidence = item.confidence
     }
     return object
   })
-  return { source: 'roomplan', room: bounds, objects }
+  return { source, room: bounds, objects }
 }

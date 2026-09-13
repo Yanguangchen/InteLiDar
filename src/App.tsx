@@ -21,6 +21,7 @@ import { moveObject, updateAppearance } from './scene/editScene'
 import { useScanProgress } from './scene/useScanProgress'
 import { ViewerScene } from './scene/ViewerScene'
 import { SCAN_DURATION_MS } from './scene/scanReveal'
+import { isMeasured } from './scene/roomScale'
 import { dprFor } from './settings/graphics'
 import { useGraphics } from './settings/useGraphics'
 import type { AnalysisStep, SceneGraph, SceneMode, Vec3 } from './scene/types'
@@ -84,10 +85,12 @@ export default function App() {
   const [settings, setSettings] = useGraphics()
 
   const displayGraph = mode === 'twin' && twinGraph ? twinGraph : graph
+  // Only a device capture skips the sweep. A simulated floor has no sensor either, says
+  // so, and is worth watching resolve.
+  const measured = isMeasured(displayGraph)
   const environment = useMemo(() => rooms.current?.environment ?? (displayGraph ? demoEnvironment(displayGraph) : null), [rooms.current, displayGraph])
   const importedView = rooms.candidate ?? rooms.current?.loaded ?? null
   const roomName = rooms.current?.loaded.name ?? displayGraph?.room.name ?? 'Meeting room'
-  const importedCapture = displayGraph?.source === 'roomplan'
   useEffect(() => {
     const definitions = displayGraph ? interactionsForGraph(displayGraph) : []
     setToggles(current => {
@@ -96,10 +99,12 @@ export default function App() {
     })
   }, [displayGraph])
   // The sweep only starts once there is geometry for the sensor to find, and a
-  // duration of 0 hands over a finished scan when animation is switched off.
+  // duration of 0 hands over a finished scan when animation is switched off. A new
+  // room id is a new scan, so importing one sweeps it rather than inheriting the last.
   const { progress: scanProgress, skip: skipScan } = useScanProgress(
     graph !== null,
-    settings.motion && !importedCapture ? SCAN_DURATION_MS : 0,
+    settings.motion && !measured ? SCAN_DURATION_MS : 0,
+    graph?.room.id,
   )
   const scanning = mode === 'raw' && graph !== null && scanProgress < 1
 
@@ -236,6 +241,9 @@ export default function App() {
   }
 
   function onImportCapture(scene: SceneGraph) {
+    // A measured scan is already understood, so it opens as a twin. A simulated one
+    // arrives as raw geometry and earns its labels from AI Reconstruct, like the demo.
+    const opensAsTwin = isMeasured(scene)
     play.exit()
     setToggles({})
     setInteraction(null)
@@ -243,8 +251,8 @@ export default function App() {
     sceneVersion.current += 1
     imported.current = true
     setGraph(scene)
-    setTwinGraph(scene)
-    setMode('twin')
+    setTwinGraph(opensAsTwin ? scene : null)
+    setMode(opensAsTwin ? 'twin' : 'raw')
     setAnalysisSteps([])
     setReply(null)
     setQuery('')
@@ -255,7 +263,7 @@ export default function App() {
     setRenovationMessage(null)
     setDragging(false)
     setError(null)
-    skipScan()
+    if (opensAsTwin) skipScan()
   }
 
   function applyRenovation(change: () => RenovationResult) {
@@ -350,7 +358,7 @@ export default function App() {
           key={displayGraph?.room.id ?? 'empty'}
           mode={mode}
           graph={displayGraph}
-          scanProgress={importedCapture ? 1 : scanProgress}
+          scanProgress={measured ? 1 : scanProgress}
           settings={settings}
           highlightedIds={highlightedIds}
           editing={editing}

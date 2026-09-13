@@ -15,6 +15,8 @@ import {
   type PointLight,
 } from 'three'
 import { canDragObject } from './editScene'
+import { preloadCatalogModels } from './catalogModel'
+import { ceilingLights, isMeasured, needsFraming, shadowExtent, showsLabel } from './roomScale'
 import { usesDemoFurniture } from '../assets/catalog'
 import { fitFurniture, updateFurnitureMaterials } from '../assets/furniture'
 import { useFurniture } from '../assets/useFurniture'
@@ -89,20 +91,26 @@ export function ViewerScene({
   onSelectObject,
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
-  const importedCapture = graph?.source === 'roomplan'
-  const sceneSettings = useMemo(() => importedCapture ? { ...settings, pointCloud: false, beam: false } : settings, [settings, importedCapture])
+  // A measured scan had no beam in the room; a simulated one is honest about having none either.
+  const measured = isMeasured(graph)
+  const framed = needsFraming(graph)
+  const sceneSettings = useMemo(() => measured ? { ...settings, pointCloud: false, beam: false } : settings, [settings, measured])
   const room = graph?.room ?? FALLBACK_ROOM
   const { camera, size: viewport } = useThree()
   const roomSpan = Math.max(room.width, room.depth, room.height)
   useEffect(() => {
-    if (!importedCapture) return
-    // Fit the measured room, including portrait Safari screens.
+    if (!framed) return
+    // Fit the whole room, including portrait Safari screens.
     const distance = Math.hypot(room.width, room.depth, room.height) * Math.max(1.3, viewport.height / viewport.width * 1.4)
     camera.position.set(distance * 0.65, distance * 0.5 + room.height * 0.35, distance * 0.7)
     camera.far = Math.max(100, distance * 5)
     camera.updateProjectionMatrix()
-  }, [camera, importedCapture, room.width, room.depth, room.height, viewport.width, viewport.height])
+  }, [camera, framed, room.width, room.depth, room.height, viewport.width, viewport.height])
   const objects = useMemo(() => graph?.objects ?? [], [graph])
+  const assetIds = useMemo(() => objects.flatMap((object) => object.assetId ?? []).join(','), [objects])
+  useEffect(() => {
+    if (assetIds) preloadCatalogModels(assetIds.split(','))
+  }, [assetIds])
   const anim = useMemo(createScanAnim, [])
   const origin = useMemo(() => sensorOrigin(room), [room])
   const schedule = useMemo(() => (graph ? scanSchedule(graph) : null), [graph])
@@ -118,6 +126,9 @@ export function ViewerScene({
     () => ({ raw: new Color('#05070a'), twin: new Color('#0b1016'), current: new Color('#05070a') }),
     [],
   )
+
+  const shadowReach = useMemo(() => shadowExtent(room), [room])
+  const lamps = useMemo(() => ceilingLights(room), [room])
 
   const twinStart = useRef(-1)
 
@@ -155,7 +166,7 @@ export function ViewerScene({
 
   return (
     <>
-      <fog attach="fog" args={['#05070a', importedCapture ? roomSpan * 3 : 9, importedCapture ? roomSpan * 8 : 26]} />
+      <fog attach="fog" args={['#05070a', framed ? roomSpan * 3 : 9, framed ? roomSpan * 8 : 26]} />
 
       <hemisphereLight
         args={[reconstructed ? '#e3ecff' : '#8f9aac', '#1a1f27', reconstructed ? 0.95 : 0.28]}
@@ -168,27 +179,30 @@ export function ViewerScene({
         shadow-mapSize-height={2048}
         shadow-bias={-0.0002}
         shadow-normalBias={0.06}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
+        shadow-camera-left={-shadowReach}
+        shadow-camera-right={shadowReach}
+        shadow-camera-top={shadowReach}
+        shadow-camera-bottom={-shadowReach}
         shadow-camera-near={0.5}
-        shadow-camera-far={28}
+        shadow-camera-far={shadowReach * 4 + 12}
       />
       {reconstructed && <directionalLight position={[-5, 4, -4.5]} intensity={0.45} color="#cfe0ff" />}
       {reconstructed && graph && <InteractiveLampLights graph={graph} toggles={toggles} />}
       {reconstructed && (
         <>
-          <pointLight
-            position={[0, room.height - 0.4, 0]}
-            intensity={1.4}
-            distance={9}
-            color="#ffe9c4"
-          />
+          {lamps.map((lamp, index) => (
+            <pointLight
+              key={index}
+              position={lamp.position}
+              intensity={1.4}
+              distance={lamp.distance}
+              color="#ffe9c4"
+            />
+          ))}
           <pointLight
             position={[room.width / 2 - 0.4, 1.6, 0]}
             intensity={1.1}
-            distance={7}
+            distance={Math.max(7, room.depth)}
             color="#a9d4ff"
           />
         </>
@@ -202,8 +216,8 @@ export function ViewerScene({
         autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
-        maxDistance={importedCapture ? roomSpan * 8 : 16}
-        target={[0, importedCapture ? room.height * 0.35 : 1, 0]}
+        maxDistance={framed ? roomSpan * 8 : 16}
+        target={[0, framed ? room.height * 0.35 : 1, 0]}
       />
 
       <group>
@@ -223,6 +237,7 @@ export function ViewerScene({
             highlighted={highlightedIds.includes(object.id)}
             targeted={gameplayActive && interactionTargetId === object.id}
             powered={Boolean(toggles[object.id])}
+            labelled={!gameplayActive && showsLabel({ total: objects.length, highlighted: highlightedIds.includes(object.id) })}
             editing={editing && !gameplayActive}
             gameplayActive={gameplayActive}
             onAssetReady={onAssetReady}
@@ -232,7 +247,7 @@ export function ViewerScene({
           />
         ))}
 
-        {!gameplayActive && !importedCapture && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
+        {!gameplayActive && !measured && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
         {!gameplayActive && <FloorGrid room={room} anim={anim} />}
       </group>
     </>
@@ -455,6 +470,7 @@ function SceneMesh({
   highlighted,
   targeted,
   powered,
+  labelled,
   editing,
   gameplayActive,
   onAssetReady,
@@ -472,6 +488,8 @@ function SceneMesh({
   highlighted: boolean
   targeted: boolean
   powered: boolean
+  /** Carries a floating name plate; a crowded scene names only the answer. */
+  labelled: boolean
   editing: boolean
   gameplayActive: boolean
   onAssetReady: (key: string, ready: boolean) => void
@@ -510,10 +528,13 @@ function SceneMesh({
   // Keyed on identity, not position: the returns belong to the object and travel
   // with it, so dragging furniture never re-scans the room.
   const cloudKey = `${object.id}:${object.size.join(',')}:${object.rotation?.join(',') ?? ''}`
+  // A catalogue model draws no returns, and neither does a room being walked through,
+  // so in both cases it never pays to sample the box.
+  const wantsCloud = settings.pointCloud && !object.assetId && !gameplayActive
   const cloud = useMemo(
-    () => buildObjectCloud(objectRef.current, origin),
+    () => (wantsCloud ? buildObjectCloud(objectRef.current, origin) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cloudKey, origin],
+    [cloudKey, origin, wantsCloud],
   )
 
   const rawMaterial = useMemo(
@@ -647,14 +668,12 @@ function SceneMesh({
             <group position={fitted.position} scale={fitted.scale} dispose={null}>
               <primitive object={instance.scene} dispose={null} />
             </group>
-          ) : reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} powered={powered} onReady={onCatalogReady} />}
+          ) : reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} powered={powered} onReady={onCatalogReady} labelled={labelled} />}
         </group>
-        {!gameplayActive && settings.pointCloud && !object.assetId && (
-          <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />
-        )}
+        {cloud && <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />}
       </group>
 
-      {reconstructed && !gameplayActive && (
+      {reconstructed && labelled && (
         <Html
           zIndexRange={[5, 0]}
           position={[0, object.size[1] / 2 + 0.2, 0]}

@@ -7,10 +7,17 @@ from app.models import AnalysisStep, ReconstructResult, SceneGraph, SceneObject
 
 _DEMO_BY_ID = {obj.id: obj for obj in demo_twin_graph().objects}
 
+# Sources that arrive already labelled: RoomPlan from the device, and the generated
+# demo floor. Neither may be overwritten by demo ids or by the size heuristic.
+_LABELLED_SOURCES = {"roomplan", "simulated"}
+
 
 def reconstruct_scene(graph: SceneGraph) -> ReconstructResult:
-    # RoomPlan already labels its measured objects. Never overwrite these with demo ids or size heuristics.
-    objects = [obj.model_copy() for obj in graph.objects] if graph.source == "roomplan" else [_classify(obj) for obj in graph.objects]
+    objects = (
+        [obj.model_copy() for obj in graph.objects]
+        if graph.source in _LABELLED_SOURCES
+        else [_classify(obj) for obj in graph.objects]
+    )
     return ReconstructResult(
         graph=SceneGraph(source=graph.source, room=graph.room, objects=objects),
         analysis_steps=_analysis_steps(objects),
@@ -114,23 +121,43 @@ def _classify_geometry(obj: SceneObject) -> SceneObject:
     )
 
 
+# How a recognised type reads in the classification log.
+_STEP_LABEL = {
+    "table": "Table", "chair": "Chair", "sofa": "Sofa", "bed": "Bed", "shelf": "Shelf",
+    "monitor": "Display", "door": "Door", "window": "Window", "plant": "Plant",
+    "lamp": "Floor lamp", "rug": "Rug", "computer": "Computer", "laptop": "Laptop",
+    "keyboard": "Keyboard", "bin": "Waste bin", "stairs": "Stairs",
+}
+
+# Played order. Openings sit high on purpose: a viewer asks where the door is long
+# before they ask about the keyboards.
+_STEP_ORDER = [
+    "table", "chair", "sofa", "bed", "shelf", "monitor", "door", "window",
+    "plant", "lamp", "rug", "computer", "laptop", "keyboard", "bin", "stairs",
+]
+
+# The HUD plays one step at a time. Past this the log outlasts anyone's attention.
+_MAX_OBJECT_STEPS = 8
+
+
 def _analysis_steps(objects: list[SceneObject]) -> list[AnalysisStep]:
-    counts = Counter(obj.type for obj in objects)
+    counts = Counter(obj.type for obj in objects if obj.type not in {"object", "unknown"})
+    category = {obj.type: obj.category for obj in objects}
+    ranked = sorted(
+        counts,
+        key=lambda kind: (_STEP_ORDER.index(kind) if kind in _STEP_ORDER else len(_STEP_ORDER), -counts[kind], kind),
+    )
     steps = [
         AnalysisStep(origin="Unknown surface", to="Wall"),
         AnalysisStep(origin="Unknown surface", to="Floor"),
     ]
-    if counts["table"]:
-        steps.append(AnalysisStep(origin="Unknown object", to="Table"))
-    if counts["chair"]:
-        n = counts["chair"]
-        steps.append(AnalysisStep(origin="Unknown object", to="Chair × 4" if n == 4 else ("Chair" if n == 1 else f"Chair × {n}")))
-    if counts["door"]:
-        steps.append(AnalysisStep(origin="Unknown opening", to="Door"))
-    if counts["window"]:
-        steps.append(AnalysisStep(origin="Unknown opening", to="Window"))
-    if counts["monitor"]:
-        steps.append(AnalysisStep(origin="Unknown object", to="Display"))
-    if counts["shelf"]:
-        steps.append(AnalysisStep(origin="Unknown object", to="Shelf"))
+    for kind in ranked[:_MAX_OBJECT_STEPS]:
+        name = _STEP_LABEL.get(kind, kind.replace("_", " ").capitalize())
+        total = counts[kind]
+        steps.append(
+            AnalysisStep(
+                origin="Unknown opening" if category.get(kind) == "opening" else "Unknown object",
+                to=name if total == 1 else f"{name} \u00d7 {total}",
+            )
+        )
     return steps

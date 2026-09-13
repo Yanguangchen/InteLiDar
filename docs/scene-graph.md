@@ -2,7 +2,7 @@
 
 Canonical JSON for a room. Every layer reads or writes this shape. Types: [src/scene/types.ts](../src/scene/types.ts) (TypeScript) and [backend/app/models.py](../backend/app/models.py) (Pydantic). Keep them aligned.
 
-Wire format is camelCase. Coordinates are metres, Y-up, origin at the floor centre. Object `position` is the **box centre**. The optional top-level `source` is `demo` (default) or `roomplan`; RoomPlan graphs keep their device labels through reconstruction and suppress the synthetic sensor effects in the viewer. The versioned file wrapper used for import is described in [ios/README.md](../ios/README.md).
+Wire format is camelCase. Coordinates are metres, Y-up, origin at the floor centre. Object `position` is the **box centre**. The optional top-level `source` is `demo` (default), `roomplan`, or `simulated`. Both `roomplan` and `simulated` graphs arrive labelled and keep those labels through reconstruction instead of being re-derived by fixture id or size. Only `roomplan` suppresses the synthetic sensor effects in the viewer: a measured room had no beam in it, while a simulated floor has no device either and says so, so it keeps the sweep. The versioned file wrapper used for import is described in [ios/README.md](../ios/README.md).
 
 ## Room
 

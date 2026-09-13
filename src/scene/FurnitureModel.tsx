@@ -18,6 +18,8 @@ export type FurnitureModelProps = {
   draggable: boolean
   powered?: boolean
   onReady?: (ready: boolean) => void
+  /** Carries per-object overlays; a crowded scene suppresses them. */
+  labelled: boolean
 }
 
 export function FurnitureModel(props: FurnitureModelProps) {
