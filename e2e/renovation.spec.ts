@@ -3,7 +3,7 @@ import { roomPlanCapture } from '../src/test/roomPlanCapture'
 
 test.use({ reducedMotion: 'reduce' })
 
-test('renovates an imported room using the actual GLB library and supports remove/undo', async ({ page }) => {
+test('renovates an imported room using the actual GLB library and supports remove/undo', async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
@@ -39,5 +39,15 @@ test('renovates an imported room using the actual GLB library and supports remov
   await expect(page.getByLabel('Selected in room').locator('option[value="rp:chair"]')).toHaveCount(0)
   await panel.getByRole('button', { name: 'Undo', exact: true }).click()
   await expect(page.getByLabel('Selected in room')).toHaveValue('rp:chair')
+  if (testInfo.project.name === 'chromium') {
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect(panel).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Preparing your character' })).toHaveCount(0)
+    await expect.poll(() => page.evaluate(() => window.__intelidarPlay?.grounded)).toBe(true)
+    await page.getByRole('button', { name: 'Exit play' }).click()
+    await page.getByRole('button', { name: 'Renovate', exact: true }).click()
+    await expect(page.getByLabel('Selected in room').locator(`option[value="${id}"]`)).toHaveCount(1)
+    await expect(page.getByLabel('Selected in room').locator('option[value="rp:chair"]')).toHaveCount(1)
+  }
   expect(errors).toEqual([])
 })

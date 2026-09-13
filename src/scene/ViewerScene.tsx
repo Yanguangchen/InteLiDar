@@ -1,6 +1,6 @@
 import { Html, OrbitControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Color,
   DoubleSide,
@@ -16,6 +16,9 @@ import {
 import { canDragObject } from './editScene'
 import { preloadCatalogModels } from './catalogModel'
 import { ceilingLights, isMeasured, needsFraming, shadowExtent, showsLabel } from './roomScale'
+import { usesDemoFurniture } from '../assets/catalog'
+import { fitFurniture, updateFurnitureMaterials } from '../assets/furniture'
+import { useFurniture } from '../assets/useFurniture'
 import { FurnitureModel } from './FurnitureModel'
 import { ScanPoints } from './ScanPoints'
 import { SensorBeacon } from './SensorBeacon'
@@ -59,6 +62,8 @@ type ViewerSceneProps = {
   dragging: boolean
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
+  gameplayActive?: boolean
+  onAssetsReady?: (ready: boolean) => void
   onSelectObject: (id: string) => void
 }
 
@@ -72,6 +77,8 @@ export function ViewerScene({
   dragging,
   onDraggingChange,
   onMoveObject,
+  gameplayActive = false,
+  onAssetsReady,
   onSelectObject,
 }: ViewerSceneProps) {
   const reconstructed = mode === 'twin'
@@ -99,6 +106,14 @@ export function ViewerScene({
   const origin = useMemo(() => sensorOrigin(room), [room])
   const schedule = useMemo(() => (graph ? scanSchedule(graph) : null), [graph])
   const sweeping = mode === 'raw' && scanProgress < 1
+  const [loadedAssets, setLoadedAssets] = useState<Record<string, boolean>>({})
+  const onAssetReady = useCallback((key: string, ready: boolean) => {
+    setLoadedAssets((previous) => previous[key] === ready ? previous : { ...previous, [key]: ready })
+  }, [])
+  const assetsReady = objects.every((object) =>
+    !reconstructed || !usesDemoFurniture(object) || loadedAssets[`${object.id}:${object.type}`],
+  )
+  useEffect(() => { onAssetsReady?.(assetsReady) }, [assetsReady, onAssetsReady])
 
   const palette = useMemo(
     () => ({ raw: new Color('#05070a'), twin: new Color('#0b1016'), current: new Color('#05070a') }),
@@ -128,7 +143,7 @@ export function ViewerScene({
     if (reconstructed) {
       if (twinStart.current < 0) twinStart.current = now
       const span = settings.motion ? TWIN_DURATION_MS / 1000 : 0
-      anim.twin = span > 0 ? Math.min(1, (now - twinStart.current) / span) : 1
+      anim.twin = span > 0 && !gameplayActive ? Math.min(1, (now - twinStart.current) / span) : 1
     } else {
       twinStart.current = -1
       anim.twin = 0
@@ -188,8 +203,8 @@ export function ViewerScene({
       <OrbitControls
         makeDefault
         enableDamping
-        enabled={!dragging}
-        autoRotate={sweeping && settings.motion && !dragging}
+        enabled={!dragging && !gameplayActive}
+        autoRotate={sweeping && settings.motion && !dragging && !gameplayActive}
         autoRotateSpeed={0.45}
         maxPolarAngle={Math.PI / 2.05}
         minDistance={3}
@@ -198,8 +213,8 @@ export function ViewerScene({
       />
 
       <group>
-        <RoomShell room={room} anim={anim} solo={!sceneSettings.pointCloud} />
-        {graph && sceneSettings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
+        <RoomShell room={room} anim={anim} solo={!sceneSettings.pointCloud} gameplayActive={gameplayActive} />
+        {!gameplayActive && graph && sceneSettings.pointCloud && <RoomCloud room={room} origin={origin} anim={anim} />}
 
         {objects.map((object, index) => (
           <SceneMesh
@@ -212,16 +227,18 @@ export function ViewerScene({
             settings={sceneSettings}
             reconstructed={reconstructed}
             highlighted={highlightedIds.includes(object.id)}
-            labelled={showsLabel({ total: objects.length, highlighted: highlightedIds.includes(object.id) })}
-            editing={editing}
+            labelled={!gameplayActive && showsLabel({ total: objects.length, highlighted: highlightedIds.includes(object.id) })}
+            editing={editing && !gameplayActive}
+            gameplayActive={gameplayActive}
+            onAssetReady={onAssetReady}
             onDraggingChange={onDraggingChange}
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
           />
         ))}
 
-        {!measured && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
-        <FloorGrid room={room} anim={anim} />
+        {!gameplayActive && !measured && <SensorBeacon room={room} anim={anim} beam={settings.beam} />}
+        {!gameplayActive && <FloorGrid room={room} anim={anim} />}
       </group>
     </>
   )
@@ -241,11 +258,13 @@ function RoomShell({
   room,
   anim,
   solo,
+  gameplayActive,
 }: {
   room: SceneRoom
   anim: ScanAnim
   /** No return cloud to carry the scan, so the wireframe has to read on its own. */
   solo: boolean
+  gameplayActive: boolean
 }) {
   const raw = useMemo(
     () =>
@@ -308,7 +327,8 @@ function RoomShell({
     surfaces.wall.opacity = anim.twin
     surfaces.floor.opacity = anim.twin
     surfaces.ceiling.opacity = anim.twin
-    surfaces.openWall.opacity = anim.twin * 0.38
+    surfaces.openWall.opacity = anim.twin * (gameplayActive ? 1 : 0.38)
+    surfaces.openWall.transparent = !gameplayActive || anim.twin < 1
 
     // Opaque once the transition lands, so the twin keeps crisp shadows.
     const settled = anim.twin >= 1
@@ -424,6 +444,8 @@ function SceneMesh({
   highlighted,
   labelled,
   editing,
+  gameplayActive,
+  onAssetReady,
   onDraggingChange,
   onMoveObject,
   onSelectObject,
@@ -439,6 +461,8 @@ function SceneMesh({
   /** Carries a floating name plate; a crowded scene names only the answer. */
   labelled: boolean
   editing: boolean
+  gameplayActive: boolean
+  onAssetReady: (key: string, ready: boolean) => void
   onDraggingChange: (dragging: boolean) => void
   onMoveObject: (id: string, position: Vec3) => void
   onSelectObject: (id: string) => void
@@ -453,12 +477,28 @@ function SceneMesh({
   dragChangeRef.current = onDraggingChange
 
   const draggable = editing && canDragObject(object)
+  const { instance, ready } = useFurniture(reconstructed && usesDemoFurniture(object) ? object.type : '')
+  const fitted = useMemo(() => instance ? fitFurniture(instance.bounds, object.size) : null, [instance, object.size])
+  useEffect(() => { onAssetReady(`${object.id}:${object.type}`, ready) }, [object.id, object.type, ready, onAssetReady])
+
+  useEffect(() => {
+    if (!instance) return
+    for (const { material } of instance.materials) {
+      if (!(material instanceof MeshStandardMaterial)) continue
+      if (!material.userData.originalColor) material.userData.originalColor = material.color.clone()
+      if (object.color) material.color.set(object.color)
+      else material.color.copy(material.userData.originalColor)
+      material.roughness = object.material === 'metal' ? 0.32 : object.material === 'fabric' ? 0.9 : 0.55
+      material.metalness = object.material === 'metal' ? 0.7 : 0
+    }
+  }, [instance, object.color, object.material])
 
   // Keyed on identity, not position: the returns belong to the object and travel
   // with it, so dragging furniture never re-scans the room.
-  const cloudKey = `${object.id}:${object.size.join(',')}`
-  // A catalogue model draws no returns, so it never pays to sample its box.
-  const wantsCloud = settings.pointCloud && !object.assetId
+  const cloudKey = `${object.id}:${object.size.join(',')}:${object.rotation?.join(',') ?? ''}`
+  // A catalogue model draws no returns, and neither does a room being walked through,
+  // so in both cases it never pays to sample the box.
+  const wantsCloud = settings.pointCloud && !object.assetId && !gameplayActive
   const cloud = useMemo(
     () => (wantsCloud ? buildObjectCloud(objectRef.current, origin) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -481,6 +521,7 @@ function SceneMesh({
 
   const shell = useRef<Group>(null)
   const rawMesh = useRef<Mesh>(null)
+  const twinMesh = useRef<Group>(null)
 
   useEffect(
     () => () => {
@@ -545,17 +586,25 @@ function SceneMesh({
     rawMaterial.emissiveIntensity = (1 - found) ** 2 * 1.6 + anim.think * 0.4
     if (rawMesh.current) rawMesh.current.visible = rawMaterial.opacity > 0.004
 
+    const glow = highlighted ? 0.45 + Math.sin(anim.time * 4.2) * 0.18 : draggable ? 0.12 : 0
+    if (instance) updateFurnitureMaterials(instance.materials, solid, glow * solid)
+    if (twinMesh.current) {
+      twinMesh.current.visible = solid > 0.004
+      // The last centimetre of the lift into place.
+      twinMesh.current.position.y = (1 - solid) * 0.06
+    }
   })
 
   const labelDelay = settings.motion ? (materialise.start * TWIN_DURATION_MS) / 1000 : 0
 
   return (
-    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]}>
+    <group position={object.position} rotation={object.rotation ?? [0, 0, 0]} name={`scene-object:${object.id}`} userData={{ semanticObjectId: object.id }}>
       <group ref={shell}>
         <mesh ref={rawMesh} material={rawMaterial}>
           <boxGeometry args={object.size} />
         </mesh>
         <group
+          ref={twinMesh}
           onPointerOver={(event) => {
             if (!draggable) return
             event.stopPropagation()
@@ -575,7 +624,11 @@ function SceneMesh({
             document.body.style.cursor = 'grabbing'
           }}
         >
-          {reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} labelled={labelled} />}
+          {instance && fitted ? (
+            <group position={fitted.position} scale={fitted.scale} dispose={null}>
+              <primitive object={instance.scene} dispose={null} />
+            </group>
+          ) : reconstructed && <FurnitureModel object={object} anim={anim} materialise={materialise} highlighted={highlighted} draggable={draggable} labelled={labelled} />}
         </group>
         {cloud && <ScanPoints cloud={cloud} anim={anim} size={0.055} hot="#b9ffee" cool="#3c8f9c" />}
       </group>
