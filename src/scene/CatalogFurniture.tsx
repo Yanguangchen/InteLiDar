@@ -24,7 +24,12 @@ function useCatalogSource(assetId: string) {
 export function CatalogFurniture(props: FurnitureModelProps) {
   const assetId = props.object.assetId!
   const { result, retry } = useCatalogSource(assetId)
-  return result?.scene ? <PlacedModel {...props} source={result.scene} /> : (
+  if (result?.scene) return <PlacedModel {...props} source={result.scene} />
+  // A failure is always worth saying, since it costs the user an object and offers a
+  // retry. A pending load is not: on a crowded floor that is a hundred chips of noise
+  // over a room that is filling in anyway.
+  if (!result?.error && !props.labelled) return null
+  return (
     <Html center zIndexRange={[5, 0]} position={[0, props.object.size[1] / 2 + 0.1, 0]}>
       <div className="asset-status" data-loading-model={assetId} role="status">
         {result?.error ? <>Model unavailable. <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={retry}>Retry</button></> : 'Loading furniture…'}

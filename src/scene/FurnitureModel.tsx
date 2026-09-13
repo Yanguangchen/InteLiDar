@@ -15,6 +15,8 @@ export type FurnitureModelProps = {
   materialise: RevealWindow
   highlighted: boolean
   draggable: boolean
+  /** Carries per-object overlays; a crowded scene suppresses them. */
+  labelled: boolean
 }
 
 export function FurnitureModel(props: FurnitureModelProps) {

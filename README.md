@@ -22,6 +22,7 @@ This repository is a hackathon MVP. Capture and computer vision are designed in;
 | Floor-plan edit: drag furniture and equipment | Working |
 | OpenAI ask adapter (heuristic fallback without a key) | Working |
 | LiDAR iPhone capture + Safari import | Native source and file import implemented; Xcode/device verification pending ([setup](./ios/README.md)) |
+| Simulated capture (no device needed) | Working — a generated 18 × 11.6 m office floor, 106 objects ([capture](./docs/capture.md)) |
 | Image-based detection and segmentation | Not started |
 
 Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reconstruct**, then ask *Show me all the chairs.*
@@ -87,7 +88,8 @@ Full walkthrough: [docs/getting-started.md](./docs/getting-started.md).
 4. The scene becomes a **semantic twin**, materialising object by object: materials, labels, lighting.
 5. Ask *Show me all the chairs.* Matching objects glow in the canvas, and so do their rows in the scene list.
 6. Toggle **Edit** and drag tables, chairs, and equipment on the floor. Select an object in **Appearance** to change its shape, textured material, and color. Doors and windows stay fixed in position; their appearance can still change. Appearance edits last for the current page session.
-7. Open **Renovate** to browse 26 models from `models/`, preview them, and add furniture at its real-world scale. Select existing or added furniture to rotate or remove it; **Undo** reverses the last add or removal. See the [renovation guide](docs/renovation.md). Layout changes last for the current page session.
+7. No iPhone to hand? Open **Import scan → Load simulated scan** for a generated **open-plan office floor** — 18 × 11.6 × 3.1 m, 106 objects, five times the demo room's area — and run the same path on it: sweep, reconstruct, ask, edit, renovate. Nothing in it was measured, and every surface says so. See [capture](./docs/capture.md#no-iphone-use-the-simulated-floor).
+8. Open **Renovate** to browse 26 models from `models/`, preview them, and add furniture at its real-world scale. Select existing or added furniture to rotate or remove it; **Undo** reverses the last add or removal. See the [renovation guide](docs/renovation.md). Layout changes last for the current page session.
 
 Suggested questions once reconstructed:
 
@@ -96,6 +98,9 @@ Show me all the chairs.
 Where is the door?
 What objects could obstruct movement through this room?
 ```
+
+On the simulated floor those answers get interesting: 27 chairs across four zones, two doors, and a room dense enough
+that the viewer names only what the answer highlighted.
 
 ## Problem
 

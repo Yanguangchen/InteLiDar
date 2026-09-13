@@ -125,7 +125,7 @@ The viewer builds axis-aligned boxes only. Rotation is stored on the graph but n
 - The browser never holds the OpenAI key.
 - CORS is limited to the Vite origin. The proxy is the supported path.
 - Highlight ids from any reasoner are intersected with the graph before they reach the client.
-- Reconstruct copies labels from the demo fixture **by id** for demo graphs; unknown demo ids use size heuristics. Graphs with `source: roomplan` retain device labels and bypass fixture lookup.
+- Reconstruct copies labels from the demo fixture **by id** for demo graphs; unknown demo ids use size heuristics. Graphs with `source: roomplan` or `source: simulated` retain their labels and bypass fixture lookup. The analysis log is derived from the graph's own type counts, ordered so openings are named even in a crowded scene, and capped so it stays short enough to play.
 
 ## Extending the pipeline
 

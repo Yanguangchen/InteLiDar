@@ -21,7 +21,13 @@ Checked against the live product: ingest → reconstruct → ask → edit/drag.
 | HUD gating (raw/sweeping/analysing/twin), progressive list, row selection | `src/components/Hud.test.tsx` | Component |
 | Frontend API client paths and errors | `src/api/scene.test.ts` | Unit |
 | Serverless path rewriting, both host behaviours | `backend/tests/test_asgi.py` | Unit |
+| Simulated floor: layout inside the shell, no overlap, nothing floating, catalogue-only models, open aisle | `src/scene/simulatedCapture.test.ts` | Unit |
+| Capture formats: roomplan + simulated pairs, `assetId` against the library, malformed rejection | `src/scene/importCapture.test.ts` | Unit |
+| Room scale: measured vs simulated, framing, shadow extent, ceiling lamps, label budget | `src/scene/roomScale.test.ts` | Unit |
+| Import dialog: simulated load, file import, unreadable file keeps the scene | `src/components/CaptureImport.test.tsx` | Component |
+| Labelled sources keep their labels; analysis log follows the scene and names openings | `backend/tests/test_reconstruct.py` | Unit |
 | Demo E2E: sweep → skip → reconstruct → ask chairs → Edit | `e2e/demo.spec.ts` | Playwright |
+| Simulated E2E: load without a device → reconstruct → ask → renovate, and the saved file re-imports | `e2e/simulated.spec.ts` | Playwright |
 | Reduced motion skips the sweep end to end | `e2e/demo.spec.ts` | Playwright |
 | Graphics menu drops effects, persists across reload, keeps the demo working | `e2e/demo.spec.ts` | Playwright |
 
@@ -38,6 +44,10 @@ Run everything with `npm test` (Vitest, pytest, Playwright). How to add tests: [
 
 ## Still out of scope
 
+- Rendering of the simulated floor at full density. Its geometry, provenance, labelling and click-path are tested; that
+  ~100 catalogue models actually resolve on screen was confirmed by running the app, not by a test.
+- WebKit/iOS Safari. `e2e/capture.spec.ts` and `e2e/renovation.spec.ts` target the `webkit-iphone` project; they were last
+  verified here on Chromium mobile emulation because this container ships no WebKit build.
 - WebGL pixel-drag of a chair (flaky in headless Chromium). Edit is covered by the toggle, hint, and `editScene` unit tests.
 - Live OpenAI network calls (stubbed / heuristic only).
 - Canvas visual regression. The sweep is covered as geometry (`scanReveal`, `scanCloud`) and as gating (`Hud`, E2E), never as pixels.
