@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Physics, useBeforePhysicsStep, useRapier } from '@react-three/rapier'
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
-import { AnimationMixer, Vector3, type AnimationAction, type Group, type Material, type Mesh, type SkinnedMesh } from 'three'
+import { AnimationMixer, LoopOnce, Vector3, type AnimationAction, type Group, type Material, type Mesh, type SkinnedMesh } from 'three'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 import { avatarCasualUrl } from '../assets/catalog'
 import type { RoomEnvironment } from '../room/types'
@@ -11,8 +11,10 @@ import type { GraphicsSettings } from '../settings/graphics'
 import { bindDesktopInput, type PlayerAnimation } from './controls'
 import { createPlayerSession, PHYSICS_STEP } from './physics'
 import { avatarCameraOpacity, CAMERA_DISTANCE, CAMERA_PITCH, CAMERA_TARGET_HEIGHT, cameraDirection, chooseInitialCameraYaw } from './camera'
+import type { InteractionSnapshot } from '../interaction/session'
+import { createSeatPose } from './seatPose'
 
-export type PlayerTelemetry = { position: Vec3; animation: PlayerAnimation; grounded: boolean }
+export type PlayerTelemetry = { position: Vec3; animation: PlayerAnimation; grounded: boolean; yaw: number; interaction: InteractionSnapshot; toggles: Readonly<Record<string, boolean>> }
 export type PlayerWorldProps = {
   environment: RoomEnvironment
   paused: boolean
@@ -21,6 +23,10 @@ export type PlayerWorldProps = {
   onReady: () => void
   onError: (message: string) => void
   allowSpawnSearch?: boolean
+  interactionRequest?: number
+  toggles?: Readonly<Record<string, boolean>>
+  onToggle?: (objectId: string) => void
+  onInteractionChange?: (snapshot: InteractionSnapshot) => void
   /** Optional instrumentation; gameplay does not set React state per frame. */
   onTelemetry?: (telemetry: PlayerTelemetry) => void
 }
@@ -73,6 +79,7 @@ function PlayerController(props: PlayerWorldProps) {
     return { model, materials: [...materials.values()] }
   }, [gltf.scene])
   const model = avatar.model
+  const seatPose = useMemo(() => createSeatPose(model), [model])
   const mixer = useMemo(() => new AnimationMixer(model), [model])
   const group = useRef<Group>(null)
   const latest = useRef(props)
@@ -84,20 +91,31 @@ function PlayerController(props: PlayerWorldProps) {
   const cameraDistance = useRef(CAMERA_DISTANCE)
   const previousAnimation = useRef<PlayerAnimation | null>(null)
   const firstFrame = useRef(true)
+  const lastInteractionRequest = useRef(props.interactionRequest)
+  const cameraHeight = useRef(CAMERA_TARGET_HEIGHT)
   const actions = useRef<Partial<Record<PlayerAnimation, AnimationAction>>>({})
   const scratch = useMemo(() => ({ feet: new Vector3(), target: new Vector3(), direction: new Vector3() }), [])
 
   useLayoutEffect(() => {
     for (const clip of gltf.animations) {
       const name = clip.name.toLowerCase()
-      if (name === 'idle' || name === 'walk' || name === 'run') actions.current[name] = mixer.clipAction(clip)
+      if (name === 'idle' || name === 'walk' || name === 'run' || name === 'sit_down' || name === 'seated_idle' || name === 'stand_up') {
+        const action = mixer.clipAction(clip)
+        if (name === 'sit_down' || name === 'stand_up') { action.setLoop(LoopOnce, 1); action.clampWhenFinished = true }
+        actions.current[name] = action
+      }
     }
-    if (!actions.current.idle || !actions.current.walk || !actions.current.run) {
-      latest.current.onError('The character is missing its idle, walk, or run animation. Reload to try again.')
+    if (Object.keys(actions.current).length !== 6) {
+      latest.current.onError('The character is missing a movement or sitting animation. Reload to try again.')
       return
     }
     try {
-      session.current = createPlayerSession(world, props.environment, props.allowSpawnSearch)
+      session.current = createPlayerSession(world, props.environment, props.allowSpawnSearch, {
+        motion: () => latest.current.settings.motion,
+        readToggle: id => latest.current.toggles?.[id] ?? false,
+        onToggle: id => latest.current.onToggle?.(id),
+        onChange: snapshot => latest.current.onInteractionChange?.(snapshot),
+      })
       const player = session.current
       const feet = player.feet()
       const target: Vec3 = [feet[0], feet[1] + CAMERA_TARGET_HEIGHT, feet[2]]
@@ -123,16 +141,21 @@ function PlayerController(props: PlayerWorldProps) {
     controls.current = bindDesktopInput(gl.domElement, () => !latest.current.paused && session.current !== null, (dx, dy) => {
       yaw.current -= dx * 0.004
       pitch.current = Math.max(-0.15, Math.min(0.65, pitch.current + dy * 0.004))
-    })
+    }, () => session.current?.interact())
     return () => { controls.current?.dispose(); controls.current = null }
   }, [gl])
 
   useEffect(() => { if (props.paused) controls.current?.clear() }, [props.paused])
   useEffect(() => {
+    if (lastInteractionRequest.current !== props.interactionRequest && !props.paused) session.current?.interact()
+    lastInteractionRequest.current = props.interactionRequest
+  }, [props.interactionRequest, props.paused])
+  useEffect(() => {
     session.current?.reset()
     session.current?.setHeading(yaw.current + Math.PI)
     controls.current?.clear()
     firstFrame.current = true
+    cameraHeight.current = CAMERA_TARGET_HEIGHT
   }, [props.resetToken])
   useEffect(() => {
     model.traverse((object) => {
@@ -162,12 +185,12 @@ function PlayerController(props: PlayerWorldProps) {
     const dt = Math.min(delta, 0.1)
     const feet = player.feet()
     scratch.feet.fromArray(feet)
-    if (firstFrame.current || !props.settings.motion || visual.position.distanceTo(scratch.feet) > 1) visual.position.copy(scratch.feet)
-    else visual.position.lerp(scratch.feet, 1 - Math.exp(-24 * dt))
-    const animation = props.paused ? 'idle' : player.animation()
+    if (firstFrame.current || !props.settings.motion || player.interaction().phase !== 'standing' || visual.position.distanceTo(scratch.feet) > 1) visual.position.copy(scratch.feet)
+    else if (!props.paused) visual.position.lerp(scratch.feet, 1 - Math.exp(-24 * dt))
+    const animation = player.animation()
     const heading = player.heading()
     const angle = Math.atan2(Math.sin(heading - visual.rotation.y), Math.cos(heading - visual.rotation.y))
-    visual.rotation.y += angle * (props.settings.motion ? 1 - Math.exp(-16 * dt) : 1)
+    if (!props.paused) visual.rotation.y += angle * (props.settings.motion ? 1 - Math.exp(-16 * dt) : 1)
     if (previousAnimation.current !== animation) {
       const previous = previousAnimation.current ? actions.current[previousAnimation.current] : undefined
       const next = actions.current[animation]
@@ -175,9 +198,19 @@ function PlayerController(props: PlayerWorldProps) {
       next?.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(props.settings.motion ? 0.16 : 0).play()
       previousAnimation.current = animation
     }
-    if (!props.paused) mixer.update(dt)
+    if (!props.paused) {
+      mixer.update(dt)
+      if (animation === 'sit_down' || animation === 'stand_up') {
+        const action = actions.current[animation]!
+        action.time = Math.min(action.getClip().duration, player.transitionTime())
+        mixer.update(0)
+      }
+      seatPose.apply(player.seatHeight(), player.seatWeight())
+    }
 
-    scratch.target.copy(visual.position).y += CAMERA_TARGET_HEIGHT
+    const desiredHeight = CAMERA_TARGET_HEIGHT - player.cameraLowering()
+    if (!props.paused) cameraHeight.current += (desiredHeight - cameraHeight.current) * (props.settings.motion ? 1 - Math.exp(-12 * dt) : 1)
+    scratch.target.copy(visual.position).y += cameraHeight.current
     scratch.direction.set(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current))
     const available = player.cameraDistance(scratch.target.toArray() as Vec3, scratch.direction.toArray() as Vec3, CAMERA_DISTANCE)
     // Contract immediately around obstructions; ease only outward along the tested clear ray.
@@ -197,7 +230,8 @@ function PlayerController(props: PlayerWorldProps) {
       material.opacity = opacity
     }
     firstFrame.current = false
-    latest.current.onTelemetry?.({ position: feet, grounded: player.grounded(), animation })
+    latest.current.onTelemetry?.({ position: feet, grounded: player.grounded(), animation, yaw: yaw.current,
+      interaction: player.interaction(), toggles: props.toggles ?? {} })
   })
   return <group ref={group}><primitive object={model} dispose={null} /></group>
 }

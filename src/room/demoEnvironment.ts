@@ -1,6 +1,8 @@
 import { Box3, Euler, Matrix4, Quaternion, Ray, Vector3 } from 'three'
 import type { SceneGraph, Vec3 } from '../scene/types'
 import type { RoomCollider, RoomEnvironment } from './types'
+import { interactionsForGraph } from '../interaction/profiles'
+import { furnitureColliders } from './furnitureColliders'
 
 export function demoEnvironment(graph: SceneGraph): RoomEnvironment {
   const { width, depth, height } = graph.room
@@ -16,12 +18,7 @@ export function demoEnvironment(graph: SceneGraph): RoomEnvironment {
     box([halfWidth + thickness, height / 2, 0], [thickness, height / 2, halfDepth]),
     box([0, height / 2, -halfDepth - thickness], [halfWidth, height / 2, thickness]),
     box([0, height / 2, halfDepth + thickness], [halfWidth, height / 2, thickness]),
-    ...furniture.map((object): RoomCollider => ({
-      kind: 'box',
-      center: [...object.position],
-      halfExtents: object.size.map((size) => size / 2) as Vec3,
-      ...(object.rotation ? { rotation: [...object.rotation] as Vec3 } : {}),
-    })),
+    ...furniture.flatMap(furnitureColliders),
   ]
 
   // A conservative candidate keeps the avatar away from furniture. Physics makes
@@ -63,5 +60,6 @@ export function demoEnvironment(graph: SceneGraph): RoomEnvironment {
     bounds: { min: [-halfWidth, 0, -halfDepth], max: [halfWidth, height, halfDepth] },
     colliders,
     spawn,
+    interactions: interactionsForGraph(graph),
   }
 }

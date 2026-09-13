@@ -6,6 +6,7 @@ import { instantiateCatalogModel, loadCatalogModel } from './catalogModel'
 import { furnitureAsset, type FurnitureAsset } from './furnitureCatalog'
 import type { FurnitureModelProps } from './FurnitureModel'
 import { revealAmount } from './scanReveal'
+import { applyObjectPower } from './furnitureEffects'
 
 function useCatalogSource(assetId: string) {
   const [result, setResult] = useState<{ id: string; scene?: Group; error?: boolean } | null>(null)
@@ -24,6 +25,8 @@ function useCatalogSource(assetId: string) {
 export function CatalogFurniture(props: FurnitureModelProps) {
   const assetId = props.object.assetId!
   const { result, retry } = useCatalogSource(assetId)
+  const onReady = props.onReady
+  useEffect(() => { onReady?.(Boolean(result?.scene)) }, [onReady, result])
   return result?.scene ? <PlacedModel {...props} source={result.scene} /> : (
     <Html center zIndexRange={[5, 0]} position={[0, props.object.size[1] / 2 + 0.1, 0]}>
       <div className="asset-status" data-loading-model={assetId} role="status">
@@ -33,7 +36,7 @@ export function CatalogFurniture(props: FurnitureModelProps) {
   )
 }
 
-function PlacedModel({ source, object, anim, materialise, highlighted, draggable }: FurnitureModelProps & { source: Group }) {
+function PlacedModel({ source, object, anim, materialise, highlighted, draggable, powered = false }: FurnitureModelProps & { source: Group }) {
   const [w, h, d] = object.size
   const model = useMemo(() => instantiateCatalogModel(source, [w, h, d]), [source, w, h, d])
   useEffect(() => () => model.dispose(), [model])
@@ -59,6 +62,7 @@ function PlacedModel({ source, object, anim, materialise, highlighted, draggable
         material.emissiveIntensity = material.userData.emission
       }
     }
+    applyObjectPower(model.materials, object, powered, solid)
   })
   return <primitive object={model.root} dispose={null} />
 }

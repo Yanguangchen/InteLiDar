@@ -1,8 +1,8 @@
 # Desktop playable rooms
 
-InteLiDar can load furniture GLBs into its demo room and let you explore with a rigged avatar. You can also import a saved GLB room locally. Both room sources share the same movement and collision system.
+InteLiDar lets you walk around the demo, imported RoomPlan scenes, and saved GLB rooms with a rigged avatar. In semantic rooms, you can also sit on supported chairs and sofas, toggle floor lamps, and switch TVs and monitors on or off. Renovation furniture uses the same interactions.
 
-This milestone targets desktop browsers with a keyboard and mouse. Mobile gameplay, touch controls, iPhone capture, and AI texture generation are deferred.
+Gameplay targets desktop browsers with a keyboard and mouse. Mobile browsers can view, import, and edit RoomPlan scenes. The repository includes a native iPhone RoomPlan capture app; building and sensor verification require Xcode and a supported phone. Mobile gameplay, touch controls, and AI texture generation are deferred.
 
 ## Play in the demo
 
@@ -16,12 +16,37 @@ This milestone targets desktop browsers with a keyboard and mouse. Mobile gamepl
 | WASD or arrow keys | Move relative to the camera |
 | Hold Shift | Run |
 | Drag the scene with the left mouse button | Rotate the following camera |
+| E or the contextual action button | Sit, stand up, or toggle the highlighted object |
 | Escape or **Exit play** | Return to inspection |
 | **Reset position** | Return to the starting point |
 
-The character stays on supported floors, slides along walls, and is blocked by furniture. Idle, walk, and run animations follow actual movement. Jumping, climbing, and pushing furniture are not included. The camera moves closer when a wall or other object would obstruct it.
+The character stays on supported floors, slides along walls, and is blocked by furniture. Idle, walk, and run animations follow actual movement. The camera moves closer when a wall or other object would obstruct it.
 
-Switching away from the browser clears movement inputs and pauses play. Select **Resume** when you return. Exiting play preserves your demo furniture edits and restores the inspection camera.
+Switching away from the browser clears held inputs and pauses play, including sitting transitions. Select **Resume** when you return. Exiting play preserves furniture edits, leaves the seat, and restores the inspection camera. Renovation remains available from inspection.
+
+## Interact with furniture
+
+Walk close to an object and face its interaction point. Within 1.5 metres, the nearest visible action appears above the control guide: **E · Sit on chair**, **E · Turn on lamp**, or **E · Turn off screen**. Only the targeted object receives the interaction highlight. Walls and other furniture block targeting.
+
+- **Chairs and sofas:** standard and office chairs, stools, procedural chair variants, and catalog sofas support sitting. Every sofa cushion is a separate seat; labeled RoomPlan sofas have a procedural cushion model. Approach from a clear side and press **E** once. The character aligns, sits down, and remains seated until you press **E** again to stand. Movement keys do not slide the character off the seat; mouse dragging still controls the camera.
+- **Safe access:** sitting requires a clear approach, room for the body and bent legs, and a supported place to stand. Armless chairs and stools can also offer checked side entries. The casual avatar is calibrated for upright seats 0.36–0.64 metres above their supporting floor; its legs adapt without resizing the character. If a seat is unavailable, the prompt explains why. Move around the chair or rearrange surrounding furniture in inspection. **Reset position** returns to the starting point, including while seated.
+- **Lamps and screens:** floor lamps glow with warm light; TVs, monitors, and laptop displays show a static illuminated surface. Each object toggles independently. Additional light sources are shadowless, with the four nearest enabled lamps supplying real light; the remaining enabled lamps retain their glow.
+- **Reduced motion:** the system preference skips alignment and pose transitions. Camera obstruction handling remains active.
+
+Holding **E** performs only one action. Interaction shortcuts are inactive while paused or typing. The on-screen button performs the same action and explains any unavailable state.
+
+Lamps and screens begin off. Their state survives exiting and re-entering Play in the current semantic room session. Replacing the semantic room or refreshing clears it. Removing furniture drops its state; undo restores the furniture with default toggle state. Layout edits are reflected when entering Play again. Toggle state is separate from the scene graph and does not alter appearance edits.
+
+Doors, drawers, picking up objects, lying on beds, jumping, climbing, pushing furniture, and multiplayer are not included. Plain GLB imports retain walking and collisions; they do not gain furniture interactions through automatic object recognition.
+
+## Import a RoomPlan scan
+
+1. Build and install InteLiDar Capture on a LiDAR-equipped iPhone using the [native capture instructions](../ios/README.md).
+2. Scan one room, finish processing, and export the `.intelidar.json` file to Files.
+3. Select **Import scan → Choose scan from Files** in the browser. The capture opens as a semantic twin, with measured furniture positions and device labels.
+4. On desktop, use **Edit** or **Renovate** to adjust the layout, then select **Play** to walk and interact with supported furniture.
+
+Opening and editing the scan is local. Asking a spatial question sends the semantic room graph to the configured API and reasoner. Refreshing clears the imported scene and edits, so keep the exported file. The native source is included; its Xcode build and real-device capture remain unverified in the Windows development environment.
 
 ## Import a saved room
 
@@ -57,6 +82,6 @@ npm install
 npm run backend
 ```
 
-See [Getting started](./getting-started.md) for other platforms and environment configuration. `npm test` runs launcher tests, frontend tests, backend tests, and the desktop Playwright flows. `npm run build` verifies the production bundle.
+See [Getting started](./getting-started.md) for other platforms and environment configuration. `npm test` runs launcher tests, frontend tests, backend tests, and Playwright flows, including mobile import and editing. `npm run build` verifies the production bundle. Run WebGL browser checks with one worker (`npm run test:e2e -- --workers=1`) to avoid competing for graphics resources.
 
-Frontend room adapters normalize the demo graph or imported mesh into meter-scaled visual geometry, bounds, colliders, and a spawn position. Gameplay consumes that shared environment independently of the capture source. A future scan adapter can supply the same interface without changing character controls.
+Frontend room adapters normalize semantic demo/RoomPlan graphs or imported meshes into meter-scaled visual geometry, bounds, colliders, and a spawn position. Semantic environments additionally provide optional interaction definitions derived from the rendered furniture profiles and transformed with each object's scale and rotation. Gameplay consumes that shared environment independently of the capture source; runtime interaction state stays separate from the semantic graph. The interaction module owns targeting, seat availability, and transitions without React updates on every frame.
