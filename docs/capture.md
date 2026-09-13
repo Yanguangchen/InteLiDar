@@ -13,7 +13,9 @@ The iOS source is in [ios/](../ios/README.md). It must be built and installed us
 
 The scan opens directly as a semantic twin with RoomPlan's labels and measured object poses. Appearance editing and the spatial assistant operate on this imported graph. The source reads **iPhone LiDAR · RoomPlan**. Importing validates the file before replacing the current scene; a failed import preserves the previous scene. Viewing an export does not require the API, while asking questions does.
 
-Only the versioned InteLiDar export is accepted. Generic RoomPlan JSON, USDZ, OBJ, GLB, PLY, LAS, and E57 are not supported. The importer expects normalized room bounds and object boxes, not an arbitrary mesh or point cloud.
+Only the versioned InteLiDar export is accepted. Generic RoomPlan JSON, USDZ, OBJ, GLB, PLY, LAS, and E57 are not accepted by the scan importer. The importer expects normalized room bounds and object boxes, not an arbitrary mesh or point cloud.
+
+A saved, self-contained GLB can be opened separately through **Import room**, including embedded textures, floor/unit setup, and desktop gameplay. See [playable rooms](./playable-rooms.md).
 
 ## The initial scene is still a demo
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from app.models import Room, SceneGraph, SceneObject
 
 DEMO_ROOM = Room(
@@ -25,24 +27,24 @@ DEMO_OBJECTS: list[SceneObject] = [
     ),
     SceneObject(
         id="chair-1",
-        rotation=(0, 3.141592653589793, 0),
         type="chair",
         label="Chair",
         category="furniture",
         position=(-0.7, 0.46, 1.15),
         size=(0.48, 0.92, 0.52),
+        rotation=(0, math.pi, 0),
         material="fabric",
         color="#3d4a5c",
         confidence=0.94,
     ),
     SceneObject(
         id="chair-2",
-        rotation=(0, 3.141592653589793, 0),
         type="chair",
         label="Chair",
         category="furniture",
         position=(0.7, 0.46, 1.15),
         size=(0.48, 0.92, 0.52),
+        rotation=(0, math.pi, 0),
         material="fabric",
         color="#467568",
         shape="armchair",
@@ -55,6 +57,7 @@ DEMO_OBJECTS: list[SceneObject] = [
         category="furniture",
         position=(-0.7, 0.46, -0.85),
         size=(0.48, 0.92, 0.52),
+        rotation=(0, 0, 0),
         material="fabric",
         color="#b96348",
         shape="visitor",
@@ -67,6 +70,7 @@ DEMO_OBJECTS: list[SceneObject] = [
         category="furniture",
         position=(0.7, 0.46, -0.85),
         size=(0.48, 0.92, 0.52),
+        rotation=(0, 0, 0),
         material="fabric",
         color="#7086a3",
         shape="task",
@@ -77,8 +81,8 @@ DEMO_OBJECTS: list[SceneObject] = [
         type="monitor",
         label="Display",
         category="equipment",
-        position=(0, 1.15, -0.28),
-        size=(1.2, 0.72, 0.08),
+        position=(0, 0.999, -0.28),
+        size=(0.58, 0.478, 0.2),
         material="plastic",
         color="#1c222c",
         confidence=0.9,
@@ -89,7 +93,8 @@ DEMO_OBJECTS: list[SceneObject] = [
         label="Storage shelf",
         category="furniture",
         position=(-3.25, 0.9, -0.4),
-        size=(0.38, 1.8, 1.6),
+        size=(1.6, 1.8, 0.38),
+        rotation=(0, math.pi / 2, 0),
         material="metal",
         color="#6b6258",
         confidence=0.88,

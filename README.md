@@ -20,6 +20,8 @@ This repository is a hackathon MVP. Capture and computer vision are designed in;
 | Reconstruct: labels, materials, analysis log | Working |
 | Spatial assistant: ask → reply + 3D highlights | Working |
 | Floor-plan edit: drag furniture and equipment | Working |
+| Desktop avatar play with furniture GLBs and collisions | Working |
+| Local static GLB room import and setup | Working |
 | OpenAI ask adapter (heuristic fallback without a key) | Working |
 | LiDAR iPhone capture + Safari import | Native source and file import implemented; Xcode/device verification pending ([setup](./ios/README.md)) |
 | Image-based detection and segmentation | Not started |
@@ -38,6 +40,7 @@ Open [http://localhost:5173](http://localhost:5173) after setup. Press **AI Reco
 | [HTTP API](./docs/api.md) | Ingest, reconstruct, ask, examples |
 | [Scene graph](./docs/scene-graph.md) | Canonical JSON, coordinates, classification |
 | [Frontend](./docs/frontend.md) | Viewer, HUD, reconstruct UX, edit mode |
+| [Desktop playable rooms](./docs/playable-rooms.md) | Keyboard/mouse play, local GLB import, supported files |
 | [Development](./docs/development.md) | TDD, tests, scripts, seams |
 | [Deploy](./docs/deploy.md) | Vercel, env vars, the same-origin requirement |
 | [Roadmap](./docs/roadmap.md) | MVP must-haves, nice-to-haves, later work |
@@ -72,7 +75,7 @@ npm run dev
 ```
 
 ```bash
-npm test                      # Vitest + pytest + Playwright E2E
+npm test                      # Launcher tests + Vitest + pytest + Playwright E2E
 ```
 
 Without a real OpenAI key, ask uses a keyword reasoner over the scene graph. The key must stay in `.env` on the backend — never prefix it with `VITE_`.

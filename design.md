@@ -20,7 +20,7 @@ LiDAR supplies measured geometry. AI supplies labels, materials, cleanup, and qu
 
 ## Current status
 
-The first slice is a **browser UI over a mock meeting room**, with a FastAPI scene graph behind it.
+The app includes a **browser UI over a mock meeting room**, with a FastAPI scene graph behind it, plus desktop gameplay and local GLB room import. See [playable rooms](docs/playable-rooms.md) for the current flow.
 
 | Layer | Status |
 | --- | --- |
@@ -32,6 +32,9 @@ The first slice is a **browser UI over a mock meeting room**, with a FastAPI sce
 | OpenAI ask adapter (stubbed in tests, heuristic fallback) | In place |
 | Vitest (edit, HUD gating, API client) | In place |
 | Playwright demo E2E | In place |
+| Furniture GLBs and rigged casual avatar | Integrated into the desktop demo |
+| Desktop movement, following camera, collisions | In place |
+| Local static GLB import and floor/unit setup | In place; session only |
 | LiDAR iPhone / RoomPlan import | Native source + Safari file import; Xcode/device verification pending |
 | Computer vision pipeline | Not started |
 | LLM-driven reconstruct | Not started |
@@ -70,6 +73,8 @@ Viewer  → Three.js digital twin + HUD
 ```
 
 Keep geometry, semantics, and presentation separate.
+
+Desktop gameplay consumes a frontend `RoomEnvironment` (bounds, colliders, and spawn) produced by either the semantic demo adapter or the local GLB adapter. Visual meshes remain separate from collision geometry. Imported GLBs preserve their materials and do not enter the backend's semantic reconstruction/ask flow. Inspection/play state is independent of the demo's raw/analysing/twin phases.
 
 | Concern | Owns | Does not own |
 | --- | --- | --- |
