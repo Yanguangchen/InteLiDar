@@ -4,6 +4,7 @@ import { capturedPoints, revealedObjects } from '../scene/scanReveal'
 import type { GraphicsSettings } from '../settings/graphics'
 import { GraphicsMenu } from './GraphicsMenu'
 import { CaptureImport } from './CaptureImport'
+import { ExportPanel } from './ExportPanel'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
@@ -106,6 +107,7 @@ export function Hud({
         <div className="topbar-actions">
           {experienceActions}
           {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
+          <ExportPanel graph={graph} disabled={mode === 'analysing'} />
           {onToggleRenovation && <button type="button" className={`chip ${renovating ? 'on' : ''}`} aria-pressed={Boolean(renovating)} disabled={!reconstructed} onClick={onToggleRenovation}>Renovate</button>}
           <button
             type="button"

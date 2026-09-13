@@ -96,6 +96,21 @@ file** hands them `simulated-office-floor.intelidar.json`, which imports like an
 
 Toggle **Edit**. Drag a chair. Show that the door does not move. Ask chairs again if you want to show highlights following the new pose (twin-graph ask uses current positions in the JSON, even though heuristics do not mention coordinates in the reply).
 
+## Step 8 — Export (the answer to "can I keep this?")
+
+Someone always asks. Press **Export**.
+
+Four files, all written in the browser and none of them uploaded: the **scan file** re-imports here with the furniture
+exactly where you left it, the **object schedule** opens in a spreadsheet with every object's type, size and footprint,
+the **floor plan** is a dimensioned SVG you can print, and the **3D model** is a glTF that opens in Blender — or straight
+back through **Import room** to walk around.
+
+Talking point: editing in the viewer lasts a session; an export is how a layout outlives one. And the model carries each
+object's label and type in its glTF `extras`, so the semantics leave with the geometry rather than staying in the app.
+
+The honest note, if it comes up: the exported model is one box per object, not the catalogue furniture on screen. That
+furniture is a generated representation, so shipping it would export invented detail as though it had been scanned.
+
 ## If something fails
 
 | Symptom | Fix |
