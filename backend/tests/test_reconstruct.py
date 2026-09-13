@@ -83,3 +83,65 @@ def test_reconstruct_classifies_unknown_geometry_without_demo_ids() -> None:
     assert by_id["b"].type == "chair"
     assert by_id["c"].type == "door"
     assert all(obj.id in {"a", "b", "c"} for obj in result.graph.objects)
+
+
+def test_simulated_reconstruction_preserves_generated_labels_without_demo_id_lookup() -> None:
+    graph = SceneGraph(
+        source="simulated", room=Room(width=18, depth=11.6, height=3.1),
+        objects=[
+            # A demo id the lookup would otherwise hijack, and a box the size heuristic would misread.
+            SceneObject(id="table-1", type="sofa", label="Three-seat sofa", category="furniture",
+                        position=(0, 0.43, 0), size=(2.18, 0.86, 0.86), assetId="sofa_3seat"),
+            SceneObject(id="sim:store-bookshelf-1", type="shelf", label="Bookshelf", category="furniture",
+                        position=(8.75, 0.9, -4.6), size=(0.8, 1.8, 0.38), rotation=(0, 1.5707963, 0)),
+        ],
+    )
+    result = reconstruct_scene(graph)
+    assert result.graph.model_dump()["source"] == "simulated"
+    assert [obj.label for obj in result.graph.objects] == ["Three-seat sofa", "Bookshelf"]
+    assert result.graph.objects[0].type == "sofa"
+    assert result.graph.objects[1].rotation == (0, 1.5707963, 0)
+
+
+def test_analysis_log_follows_the_scene_and_stays_short_enough_to_play() -> None:
+    objects = [
+        SceneObject(id=f"sofa-{n}", type="sofa", label="Sofa", category="furniture",
+                    position=(0, 0.43, 0), size=(2.18, 0.86, 0.86))
+        for n in range(3)
+    ] + [
+        SceneObject(id=f"plant-{n}", type="plant", label="Plant", category="furniture",
+                    position=(0, 0.4, 0), size=(0.3, 0.8, 0.3))
+        for n in range(9)
+    ] + [
+        SceneObject(id="lamp-1", type="lamp", label="Floor lamp", category="furniture",
+                    position=(0, 0.8, 0), size=(0.45, 1.6, 0.45)),
+    ]
+    steps = reconstruct_scene(SceneGraph(source="simulated", room=Room(width=18, depth=11.6, height=3.1),
+                                        objects=objects)).analysis_steps
+    headings = [step.to for step in steps]
+    assert "Sofa × 3" in headings
+    assert "Plant × 9" in headings
+    assert "Floor lamp" in headings
+    assert len(steps) <= 10
+
+
+def test_analysis_log_names_openings_even_in_a_crowded_scene() -> None:
+    crowd = [
+        SceneObject(id=f"{kind}-{n}", type=kind, label=kind.title(), category="furniture",
+                    position=(0, 0.4, 0), size=(0.4, 0.8, 0.4))
+        for kind, total in (("chair", 27), ("table", 18), ("plant", 10), ("shelf", 10),
+                            ("laptop", 7), ("keyboard", 6), ("bin", 5), ("computer", 4))
+        for n in range(total)
+    ]
+    crowd += [
+        SceneObject(id="door-a", type="door", label="Door", category="opening",
+                    position=(0, 1.05, 5.7), size=(1.1, 2.15, 0.12)),
+        SceneObject(id="window-a", type="window", label="Window", category="opening",
+                    position=(0, 1.75, -5.7), size=(2.4, 1.5, 0.1)),
+    ]
+    steps = reconstruct_scene(SceneGraph(source="simulated", room=Room(width=18, depth=11.6, height=3.1),
+                                         objects=crowd)).analysis_steps
+    headings = {step.to for step in steps}
+    assert "Door" in headings
+    assert "Window" in headings
+    assert next(step.origin for step in steps if step.to == "Door") == "Unknown opening"
