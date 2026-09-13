@@ -51,7 +51,9 @@ final class CaptureViewController: UIViewController, RoomCaptureViewDelegate {
             preview.heightAnchor.constraint(greaterThanOrEqualToConstant: 100),
         ])
         updateControls()
-        NotificationCenter.default.addObserver(self, selector: #selector(finishIfInterrupted), name: UIApplication.willResignActiveNotification, object: nil)
+        // Background, not resign-active: a notification banner, Control Center, or the
+        // app switcher all resign active, and ending the scan there is unrecoverable.
+        NotificationCenter.default.addObserver(self, selector: #selector(finishIfBackgrounded), name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
@@ -129,8 +131,8 @@ final class CaptureViewController: UIViewController, RoomCaptureViewDelegate {
         captureView?.captureSession.stop()
     }
 
-    @objc private func finishIfInterrupted() {
-        // Do not continue camera capture after the app loses foreground access.
+    @objc private func finishIfBackgrounded() {
+        // Do not continue camera capture once the app actually loses the foreground.
         if state == .scanning { finishScan() }
     }
 
@@ -167,7 +169,9 @@ final class CaptureViewController: UIViewController, RoomCaptureViewDelegate {
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(scan)
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(scan.room.id.replacingOccurrences(of: ":", with: "-" )).intelidar.json")
-            try data.write(to: url, options: [.atomic, .completeFileProtection])
+            // Protected at rest, but still readable by whatever the share sheet hands it
+            // to; .completeFileProtection would lock the file the moment the phone does.
+            try data.write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
             let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
             sheet.popoverPresentationController?.sourceView = export
             present(sheet, animated: true)

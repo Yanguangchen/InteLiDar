@@ -31,6 +31,9 @@ The export contains room bounds, object dimensions, positions, rotations, catego
 
 - Format marker `intelidar.roomplan`, version `1`, source `roomplan`.
 - Metres, Y up, right-handed; origin normalized to the centre of the enclosing floor rectangle.
+- **The room is squared up before it is measured.** RoomPlan reports geometry in the AR session's world frame, whose heading is wherever the phone pointed at **Start scan**, not the room's walls. The exporter derives the dominant wall yaw (circular mean of 4θ, weighted by wall width) and rotates all geometry onto it first. Without this a 5 × 4 m room scanned 45° off axis exports as 6.4 × 6.4 m with its furniture on the diagonal. A room already square to the world is unchanged; the nearest alignment may transpose width and depth, which is still square.
+- Floor height is taken from the walls, which run floor to ceiling, rather than from the lowest point of any object.
+- Measurements are rounded to the millimetre and rotations to the microradian on the way out. `Float` is binary32 and `JSONEncoder` widens it to `Double`, so an unrounded 5.2 would reach the viewer — and the HUD — as `5.199999809265137`.
 - Dimensions are full local extents; positions are box centres. Rotation is XYZ Euler in radians, including the gimbal-lock case.
 - Room bounds enclose transformed walls and objects; individual furniture retains its measured orientation. A room is currently represented by an enclosing rectangle, so angled/L-shaped/curved walls are approximated. Raw wall polygons and open passageways are not exported.
 - Zero-depth doors/windows get a 1 cm display thickness. RoomPlan labels map to the existing furniture catalog; unsupported furniture types use the generic model.
@@ -49,6 +52,6 @@ xcodebuild -project ios/InteLiDarCapture.xcodeproj -scheme InteLiDarCapture \
   -destination 'platform=iOS Simulator,id=<SIMULATOR-UDID>' test
 ```
 
-`ScanExportTests` covers origin normalization, planar thickness, JSON object encoding, and XYZ rotation round-trips. On a real phone also verify unsupported-device gating, permission denial and recovery, foreground interruption, capture completion, failed/incomplete scans, new-scan confirmation, and export into Safari. Browser tests run in Chromium and WebKit with an iPhone profile and use a synthetic file with the same export contract; they are not proof of real sensor capture. Install browser test engines with `npx playwright install chromium webkit`.
+`ScanExportTests` covers origin normalization, planar thickness, JSON object encoding, XYZ rotation round-trips, squaring the room up across every scan heading (including the no-op, the long-wall vote, and walls it cannot read), and millimetre rounding. On a real phone also verify unsupported-device gating, permission denial and recovery, that a notification banner or Control Center does **not** end a scan while backgrounding does, capture completion, failed/incomplete scans, new-scan confirmation, and export into Safari. Browser tests run in Chromium and WebKit with an iPhone profile and use a synthetic file with the same export contract; they are not proof of real sensor capture. Install browser test engines with `npx playwright install chromium webkit`.
 
 Apple references: [RoomPlan](https://developer.apple.com/augmented-reality/roomplan/), [hardware support](https://developer.apple.com/documentation/roomplan/roomcapturesession/issupported), [capture view callbacks](https://developer.apple.com/documentation/roomplan/roomcaptureviewdelegate).
