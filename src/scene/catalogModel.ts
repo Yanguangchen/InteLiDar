@@ -21,6 +21,17 @@ export function loadCatalogModel(assetId: string): Promise<Group> {
   return pending
 }
 
+/**
+ * Warm the cache for every model a scene is about to place.
+ *
+ * A hundred-object floor draws on about two dozen distinct models. Left to the
+ * meshes, each file is only requested when its first placement mounts; asked for
+ * together, they download and parse in parallel and the room fills in far sooner.
+ */
+export function preloadCatalogModels(assetIds: Iterable<string>): void {
+  for (const id of new Set(assetIds)) void loadCatalogModel(id).catch(() => {})
+}
+
 /** Geometry stays in the loader cache; each placement owns and disposes its own materials. */
 export function instantiateCatalogModel(source: Object3D, size: Vec3) {
   const content = source.clone(true)

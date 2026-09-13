@@ -15,9 +15,10 @@ export type ScanProgress = {
  * Drives the opening sweep once the scan data is in.
  *
  * Whether the sweep should play at all is a graphics setting, not this hook's
- * call: pass a duration of 0 to hand over a finished scan immediately.
+ * call: pass a duration of 0 to hand over a finished scan immediately. Passing a
+ * new `sceneKey` restarts the sweep, so importing a second room scans it again.
  */
-export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS): ScanProgress {
+export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS, sceneKey?: string): ScanProgress {
   const [progress, setProgress] = useState(0)
   const skipped = useRef(false)
 
@@ -34,6 +35,8 @@ export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS):
       setProgress(1)
       return
     }
+    // A new room is a new scan: rewind rather than inherit the last sweep's finish.
+    setProgress(0)
 
     let frame = 0
     let start: number | null = null
@@ -49,7 +52,7 @@ export function useScanProgress(active: boolean, durationMs = SCAN_DURATION_MS):
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [active, durationMs])
+  }, [active, durationMs, sceneKey])
 
   return { progress, skip }
 }

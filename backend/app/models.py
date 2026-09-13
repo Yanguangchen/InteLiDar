@@ -41,7 +41,7 @@ class SceneObject(ApiModel):
 
 
 class SceneGraph(ApiModel):
-    source: Literal["demo", "roomplan"] = "demo"
+    source: Literal["demo", "roomplan", "simulated"] = "demo"
     room: Room
     objects: list[SceneObject]
 

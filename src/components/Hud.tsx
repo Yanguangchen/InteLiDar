@@ -4,6 +4,7 @@ import { capturedPoints, revealedObjects } from '../scene/scanReveal'
 import type { GraphicsSettings } from '../settings/graphics'
 import { GraphicsMenu } from './GraphicsMenu'
 import { CaptureImport } from './CaptureImport'
+import { ExportPanel } from './ExportPanel'
 import { useSpecular } from './useSpecular'
 
 type HudProps = {
@@ -38,6 +39,25 @@ const SUGGESTIONS = [
   'What objects could obstruct movement through this room?',
 ]
 
+/** How each scan describes its own provenance. A simulated floor never borrows the device's. */
+const PROVENANCE: Record<string, { tag: string; source: string }> = {
+  roomplan: { tag: 'iPhone LiDAR · RoomPlan', source: 'iPhone LiDAR · RoomPlan' },
+  simulated: { tag: 'Simulated LiDAR · no device', source: 'Simulated scan · no device' },
+}
+
+const DEMO_PROVENANCE = { tag: 'Scan reality. AI understands it.', source: 'Demo · no scanner connected' }
+
+/**
+ * What a row reads before the reconstructor has named it.
+ *
+ * An imported scan may already carry labels, but the raw mesh is the state
+ * *before* AI understood it: showing those names here would give the answer away
+ * and contradict the viewer, which labels nothing until the twin.
+ */
+function rawLabel(object: SceneObject): string {
+  return object.category === 'opening' ? 'Unknown opening' : 'Unknown object'
+}
+
 export function Hud({
   experienceActions,
   mode,
@@ -70,6 +90,7 @@ export function Hud({
   const objects = graph?.objects ?? []
   const detected = reconstructed ? objects : revealedObjects(graph, scanProgress)
   const found = new Set(detected.map((object) => object.id))
+  const provenance = (graph?.source && PROVENANCE[graph.source]) || DEMO_PROVENANCE
 
   return (
     <div className="hud">
@@ -80,12 +101,13 @@ export function Hud({
           <span className={`mark ${scanning ? 'sweeping' : ''}`} aria-hidden="true" />
           <div>
             <p className="name">InteLiDar</p>
-            <p className="tag">{graph?.source === 'roomplan' ? 'iPhone LiDAR · RoomPlan' : 'Scan reality. AI understands it.'}</p>
+            <p className="tag">{provenance.tag}</p>
           </div>
         </div>
         <div className="topbar-actions">
           {experienceActions}
           {onImportCapture && <CaptureImport onImport={onImportCapture} disabled={mode === 'analysing'} />}
+          <ExportPanel graph={graph} disabled={mode === 'analysing'} />
           {onToggleRenovation && <button type="button" className={`chip ${renovating ? 'on' : ''}`} aria-pressed={Boolean(renovating)} disabled={!reconstructed} onClick={onToggleRenovation}>Renovate</button>}
           <button
             type="button"
@@ -127,7 +149,7 @@ export function Hud({
           </div>
           <div>
             <dt>Source</dt>
-            <dd>{graph?.source === 'roomplan' ? 'iPhone LiDAR · RoomPlan' : 'Demo · no scanner connected'}</dd>
+            <dd>{provenance.source}</dd>
           </div>
         </dl>
 
@@ -250,7 +272,7 @@ function ObjectRow({
         onClick={() => onSelect(object.id)}
       >
         <span className="obj-type">{reconstructed ? object.type : 'unknown'}</span>
-        <span className="obj-label">{object.label}</span>
+        <span className="obj-label">{reconstructed ? object.label : rawLabel(object)}</span>
         {confidence !== null && <span className="obj-confidence">{confidence}%</span>}
       </button>
     </li>
